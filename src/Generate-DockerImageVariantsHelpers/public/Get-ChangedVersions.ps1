@@ -1,53 +1,79 @@
 function Get-ChangedVersions {
     param (
+        [Parameter(Mandatory)]
+        [AllowEmptyCollection()]
         [string[]]$Versions
     ,
+        [Parameter(Mandatory)]
+        [AllowEmptyCollection()]
         [string[]]$VersionsNew
     ,
         [switch]$AsObject
+    ,
+        [switch]$Descending
     )
-    $Versions = $Versions | Select-Object -Unique | Sort-Object { [version]$_ }
-    $VersionsNew = $VersionsNew | Select-Object -Unique | Sort-Object { [version]$_ }
+    $Versions = @( $Versions | Select-Object -Unique | Sort-Object { [version]$_ } -Descending )
+    $VersionsNew = @( $VersionsNew | Select-Object -Unique | Sort-Object { [version]$_ } -Descending )
 
     $versionsChanged = [ordered]@{}
-    foreach ($v in $Versions) {
-        $v = [version]$v
-        $matchingV = $VersionsNew | ? { $vn = [version]$_; $vn.Major -eq $v.Major -and $vn.Minor -eq $v.Minor -and $vn.Build -eq $v.Build }
-        if ($matchingV) {
-            "Existing major.minor.patch version did not change: $v" | Write-Verbose
-            $versionsChanged["$v"] = @{
-                from = "$v"
-                to = "$v"
-                kind = 'existing'
-            }
+    if ($Versions.Count -eq 0) {
+        if ($VersionsNew.Count -eq 0) {
+            "Both Versions and VersionsNew are empty" | Write-Verbose
         }else {
             foreach ($vn in $VersionsNew) {
-                $vn = [version]$vn
-                if ($vn.Major -gt $v.Major) {
-                    if (!$versionsChanged.Contains("$vn")) {
-                        "Found new major version: $vn" | Write-Verbose
-                        $versionsChanged["$vn"] = [ordered]@{
-                            from = "$v"
-                            to = "$vn"
-                            kind = 'new'
+                "Found new version: $vn" | Write-Verbose
+                $versionsChanged["$vn"] = [ordered]@{
+                    from = "$vn"
+                    to = "$vn"
+                    kind = 'new'
+                }
+            }
+        }
+    }else {
+        foreach ($v in $Versions) {
+            $v = [version]$v
+            $matchingV = $VersionsNew | ? { $vn = [version]$_; $vn.Major -eq $v.Major -and $vn.Minor -eq $v.Minor -and $vn.Build -eq $v.Build }
+            if ($matchingV) {
+                "Existing major.minor.patch version did not change: $v" | Write-Verbose
+                $versionsChanged["$v"] = [ordered]@{
+                    from = "$v"
+                    to = "$v"
+                    kind = 'existing'
+                }
+            }else {
+                foreach ($vn in $VersionsNew) {
+                    $vn = [version]$vn
+                    if ($vn.Major -gt $v.Major) {
+                        if (!$versionsChanged.Contains("$vn")) {
+                            "Found new major version: $vn" | Write-Verbose
+                            $versionsChanged["$vn"] = [ordered]@{
+                                from = "$vn"
+                                to = "$vn"
+                                kind = 'new'
+                            }
+                            # break
                         }
                     }
-                }elseif ($vn.Major -eq $v.Major -and $vn.Minor -gt $v.Minor) {
-                    if (!$versionsChanged.Contains("$vn")) {
-                        "Found new minor version: $vn" | Write-Verbose
-                        $versionsChanged["$vn"] = [ordered]@{
-                            from = "$v"
-                            to = "$vn"
-                            kind = 'new'
+                    if ($vn.Major -eq $v.Major -and $vn.Minor -gt $v.Minor) {
+                        if (!$versionsChanged.Contains("$vn")) {
+                            "Found new minor version: $vn" | Write-Verbose
+                            $versionsChanged["$vn"] = [ordered]@{
+                                from = "$vn"
+                                to = "$vn"
+                                kind = 'new'
+                            }
+                            # break
                         }
                     }
-                }elseif ($vn.Major -eq $v.Major -and $vn.Minor -eq $v.Minor -and $vn.Build -gt $v.Build) {
-                    if (!$versionsChanged.Contains("$vn")) {
-                        "Found new patch version: $v to $vn" | Write-Verbose
-                        $versionsChanged["$vn"] = [ordered]@{
-                            from = "$v"
-                            to = "$vn"
-                            kind = 'new'
+                    if ($vn.Major -eq $v.Major -and $vn.Minor -eq $v.Minor -and $vn.Build -gt $v.Build) {
+                        if (!$versionsChanged.Contains("$vn")) {
+                            "Found new patch version: $v to $vn" | Write-Verbose
+                            $versionsChanged["$vn"] = [ordered]@{
+                                from = "$v"
+                                to = "$vn"
+                                kind = 'update'
+                            }
+                            # break
                         }
                     }
                 }
@@ -56,9 +82,21 @@ function Get-ChangedVersions {
     }
 
     if ($AsObject) {
-        $versionsChanged
+        if ($Descending) {
+            $versionsChanged
+        }else {
+            $versionsChangedAsc = [ordered]@{}
+            $versionsChanged.Keys | Sort-Object | % {
+                $versionsChangedAsc[$_] = $versionsChanged[$_]
+            }
+            $versionsChangedAsc
+        }
     }else {
-        $versionsChanged.Keys
+        if ($Descending) {
+            ,@( $versionsChanged.Keys )
+        }else {
+            ,@( $versionsChanged.Keys | Sort-Object )
+        }
     }
 
         # $vMajMatch = $VersionsNew | ? { $vn = [version]$_; $vn.Major -eq $v.Major }
