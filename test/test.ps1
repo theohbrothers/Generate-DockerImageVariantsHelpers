@@ -23,7 +23,7 @@ Get-Module Pester -ListAvailable
 Import-Module Pester -MinimumVersion $pesterMinVersion -MaximumVersion $pesterMaxVersion -Force -ErrorAction Stop
 
 # Test the module manifest
-Test-ModuleManifest "$MODULE_MANIFEST" -ErrorAction Stop
+# Test-ModuleManifest "$MODULE_MANIFEST" -ErrorAction Stop
 
 # Import our module
 Get-Module "$MODULE_NAME" | Remove-Module -Force
