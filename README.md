@@ -16,7 +16,7 @@ Install-Module -Name Generate-DockerImageVariantsHelpers -Repository PSGallery -
 
 If prompted to trust the repository, hit `Y` and `enter`.
 
-Dependency modules are automatically installed:
+All [required modules](src/Generate-DockerImageVariantsHelpers/Generate-DockerImageVariantsHelpers.psd1) are automatically installed:
 
 - [Generate-DockerImageVariants](https://www.powershellgallery.com/packages/Generate-DockerImageVariants/)
 - [PowerShellForGitHub](https://www.powershellgallery.com/packages/PowerShellForGitHub)
@@ -28,7 +28,7 @@ Aftr importing the module, use the [cmdlets](src/Generate-DockerImageVariantsHel
 ```sh
 Import-Module Generate-DockerImageVariantsHelpers
 
-Execute-Command 'foo'
-Get-ChangedVersions -Versions @( '1.0.0' ) -VersionsNew @( '1.0.1' )
-New-PR -Verb add
+Execute-Command 'git status'
+$changedVersions = Get-ChangedVersions -Versions @( '1.0.0' ) -VersionsNew @( '1.0.1', '1.1.0' ) -AsObject
+$changedVersions = New-PR -Version 1.0.0 -VersionNew 1.0.1 -Verb update
 ```
