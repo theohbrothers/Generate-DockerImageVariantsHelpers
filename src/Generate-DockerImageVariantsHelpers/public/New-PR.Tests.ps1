@@ -2,6 +2,9 @@ $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path) -replace '\.Tests\.', '.'
 . "$here\$sut"
 
+Get-Module Generate-DockerImageVariants -ErrorAction SilentlyContinue | Remove-Module -Force
+Get-Module PowerShellForGitHub -ErrorAction SilentlyContinue | Remove-Module -Force
+
 Describe "New-PR" -Tag 'Unit' {
 
     function Execute-Command {}

@@ -22,8 +22,26 @@ if ( ! $pester -or ! ($pester.Version | ? { $_ -ge $pesterMinVersion -and $_ -le
 Get-Module Pester -ListAvailable
 Import-Module Pester -MinimumVersion $pesterMinVersion -MaximumVersion $pesterMaxVersion -Force -ErrorAction Stop
 
+# Install required modules
+$manifest = (Get-Content $MODULE_MANIFEST -Raw | Invoke-Expression)
+foreach ($m in $manifest.RequiredModules) {
+    $m = $m.Clone()
+    $m['Name'] = $m['ModuleName']
+    $m.Remove('ModuleName')
+    if (!(Get-InstalledModule @m -ErrorAction SilentlyContinue)) {
+        "Installing required module: $( $m['Name'] )" | Write-Host -ForegroundColor Green
+        Install-Module @m -Force -Scope CurrentUser -ErrorAction Stop
+    }
+    Get-Module $m['Name'] -ListAvailable
+}
+
 # Test the module manifest
 Test-ModuleManifest "$MODULE_MANIFEST" -ErrorAction Stop
+
+# Unload required modules (not needed for unit tests)
+# foreach ($m in $manifest.RequiredModules) {
+#     Get-Module -Name $m['ModuleName'] | Remove-Module -Force -ErrorAction Stop
+# }
 
 # Import our module
 Get-Module "$MODULE_NAME" | Remove-Module -Force

@@ -51,8 +51,8 @@ PowerShellVersion = '3.0'
 # ProcessorArchitecture = ''
 
 # Modules that must be imported into the global environment prior to importing this module
-RequiredModules = @(@{ModuleName = 'Generate-DockerImageVariants'; MaximumVersion = '0.5.0'; }, 
-               @{ModuleName = 'PowerShellForGitHub'; MaximumVersion = '0.16.1'; })
+RequiredModules = @(@{ModuleName = 'Generate-DockerImageVariants'; RequiredVersion = '0.4.7'; }, 
+               @{ModuleName = 'PowerShellForGitHub'; RequiredVersion = '0.16.1'; })
 
 # Assemblies that must be loaded prior to importing this module
 # RequiredAssemblies = @()
