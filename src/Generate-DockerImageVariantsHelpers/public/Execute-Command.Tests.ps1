@@ -14,6 +14,10 @@ Describe "Execute-Command" -Tag 'Unit' {
 
     Context 'Behavior' {
 
+        It 'Executes command (pipeline)' {
+            'hostname' | Execute-Command > $null
+        }
+
         It 'Executes command' {
             Execute-Command -Command 'hostname' > $null
         }

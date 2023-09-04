@@ -1,11 +1,23 @@
 function Execute-Command {
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName='Default')]
     param (
-        [string]$Command
+        [Parameter(Mandatory,ParameterSetName='Default')]
+        [ValidateNotNull()]
+        [object]$Command
+    ,
+        [Parameter(ValueFromPipeline,ParameterSetName='Pipeline')]
+        [object]$InputObject
     )
-    Invoke-Expression $Command
-    # Honor `-ErrorAction Stop` to throw terminating error for non-zero exit code
-    if ($ErrorActionPreference -eq 'Stop' -and $LASTEXITCODE) {
-        throw "Command exit code was $LASTEXITCODE. Command: $Command"
+
+    process {
+        if ($InputObject) {
+            $Command = $InputObject
+        }
+        Invoke-Expression $Command
+
+        # Honor `-ErrorAction Stop` for non-zero exit code
+        if ($ErrorActionPreference -eq 'Stop' -and $LASTEXITCODE) {
+            throw "Command exit code was $LASTEXITCODE. Command: $Command"
+        }
     }
 }
