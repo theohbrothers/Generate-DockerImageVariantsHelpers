@@ -19,6 +19,7 @@ Describe "Execute-Command" -Tag 'Unit' {
         }
 
         It 'Executes command' {
+            Execute-Command 'hostname' > $null
             Execute-Command -Command 'hostname' > $null
         }
 

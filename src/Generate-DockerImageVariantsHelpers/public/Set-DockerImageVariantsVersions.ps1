@@ -1,7 +1,7 @@
 function Set-DockerImageVariantsVersions {
     [CmdletBinding(DefaultParameterSetName='Default')]
     param (
-        [Parameter(Mandatory,ParameterSetName='Default')]
+        [Parameter(Mandatory,ParameterSetName='Default',Position=0)]
         [ValidateNotNull()]
         [object]$Versions
     ,
