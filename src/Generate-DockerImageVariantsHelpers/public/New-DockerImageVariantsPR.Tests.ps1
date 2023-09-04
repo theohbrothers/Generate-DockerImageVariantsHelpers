@@ -5,7 +5,7 @@ $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path) -replace '\.Tests\.', '.'
 Get-Module Generate-DockerImageVariants -ErrorAction SilentlyContinue | Remove-Module -Force
 Get-Module PowerShellForGitHub -ErrorAction SilentlyContinue | Remove-Module -Force
 
-Describe "New-PR" -Tag 'Unit' {
+Describe "New-DockerImageVariantsPR" -Tag 'Unit' {
 
     function Execute-Command {}
     function Generate-DockerImageVariants {}
@@ -45,7 +45,7 @@ Describe "New-PR" -Tag 'Unit' {
             Mock Get-GitHubPullRequest {}
             Mock New-GitHubPullRequest { Get-FakePR }
 
-            New-PR -Version $version -Verb add -ErrorAction Stop
+            New-DockerImageVariantsPR -Version $version -Verb add -ErrorAction Stop
 
             Assert-MockCalled Get-GitHubMilestone -Scope It -Times 1
             Assert-MockCalled New-GitHubMilestone -Scope It -Times 1
@@ -59,7 +59,7 @@ Describe "New-PR" -Tag 'Unit' {
             Mock Get-GitHubPullRequest { Get-FakePR }
             Mock New-GitHubPullRequest {}
 
-            New-PR -Version $version -Verb add -ErrorAction Stop
+            New-DockerImageVariantsPR -Version $version -Verb add -ErrorAction Stop
 
             Assert-MockCalled Get-GitHubMilestone -Scope It -Times 1
             Assert-MockCalled New-GitHubMilestone -Scope It -Times 0
@@ -88,7 +88,7 @@ Describe "New-PR" -Tag 'Unit' {
             Mock Get-GitHubPullRequest {}
             Mock New-GitHubPullRequest { Get-FakePR }
 
-            New-PR -Version $version -VersionNew $VersionNew -Verb update -ErrorAction Stop
+            New-DockerImageVariantsPR -Version $version -VersionNew $VersionNew -Verb update -ErrorAction Stop
 
             Assert-MockCalled Get-GitHubMilestone -Scope It -Times 1
             Assert-MockCalled New-GitHubMilestone -Scope It -Times 1
@@ -102,7 +102,7 @@ Describe "New-PR" -Tag 'Unit' {
             Mock Get-GitHubPullRequest { Get-FakePR }
             Mock New-GitHubPullRequest {}
 
-            New-PR -Version $version -VersionNew $VersionNew -Verb update -ErrorAction Stop
+            New-DockerImageVariantsPR -Version $version -VersionNew $VersionNew -Verb update -ErrorAction Stop
 
             Assert-MockCalled Get-GitHubMilestone -Scope It -Times 1
             Assert-MockCalled New-GitHubMilestone -Scope It -Times 0

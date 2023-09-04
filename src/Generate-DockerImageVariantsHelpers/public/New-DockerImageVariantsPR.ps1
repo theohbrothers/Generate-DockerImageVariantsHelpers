@@ -1,4 +1,4 @@
-function New-PR {
+function New-DockerImageVariantsPR {
     [CmdletBinding()]
     param (
         [ValidateNotNullOrEmpty()]

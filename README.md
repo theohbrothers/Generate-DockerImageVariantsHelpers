@@ -21,23 +21,34 @@ All [required modules](src/Generate-DockerImageVariantsHelpers/Generate-DockerIm
 - [Generate-DockerImageVariants](https://www.powershellgallery.com/packages/Generate-DockerImageVariants/)
 - [PowerShellForGitHub](https://www.powershellgallery.com/packages/PowerShellForGitHub)
 
-## Cmdlets
+## Usage
 
-Aftr importing the module, use the [cmdlets](src/Generate-DockerImageVariantsHelpers/public) for cmdlets.
+Import the module, and the [cmdlets](src/Generate-DockerImageVariantsHelpers/public) will be available. For example:
 
 ```powershell
 Import-Module Generate-DockerImageVariantsHelpers
 
+# Get generate/definitions/versions.json
+Get-DockerImageVariantsVersions
+
+# Set generate/definitions/versions.json
+Set-DockerImageVariantsVersions @( '0.1.0', '0.2.0' )
+
 # Execute commands
 Execute-Command 'git status'
+
 # Get changed versions
 $versionsChanged = Get-VersionsChanged -Versions @( '1.0.0' ) -VersionsNew @( '1.0.1', '1.1.0' ) -AsObject
+
 # Open PRs from changed versions
 foreach ($c in $versionsChanged.Values) {
     if ($c['new']) {
-        New-PR -Version $c['from'] -Verb add
+        New-DockerImageVariantsPR -Version $c['to'] -Verb add
     }elseif ($c['update']) {
-        New-PR -Version $c['from'] -VersionNew $c['to'] -Verb update
+        New-DockerImageVariantsPR -Version $c['from'] -VersionNew $c['to'] -Verb update
     }
 }
+
+# Update generate/definitions/versions.json and open a PR for each changed version
+Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR
 ```
