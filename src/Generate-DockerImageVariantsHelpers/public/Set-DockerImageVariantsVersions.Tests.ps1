@@ -6,7 +6,15 @@ Describe "Set-DockerImageVariantsVersions" {
 
     Context 'Behavior' {
 
-        It "Sets version.json" {
+        It "Sets version.json with an empty array" {
+            Mock Set-Content {}
+
+            Set-DockerImageVariantsVersions -Versions @()
+
+            Assert-MockCalled Set-Content -Scope It -Times 1
+        }
+
+        It "Sets version.json with a non-empty array" {
             Mock Set-Content {}
 
             Set-DockerImageVariantsVersions -Versions @( '0.1.0', '0.2.0' )
