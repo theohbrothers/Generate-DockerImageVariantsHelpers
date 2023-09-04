@@ -32,19 +32,20 @@ Import-Module Generate-DockerImageVariantsHelpers
 Get-DockerImageVariantsVersions
 
 # Set generate/definitions/versions.json
-Set-DockerImageVariantsVersions @( '0.1.0', '0.2.0' )
+Set-DockerImageVariantsVersions -Versions @( '0.1.0', '0.2.0' )
 
 # Execute commands
-Execute-Command 'git status'
+'git status' | Execute-Command -ErrorAction Stop
 
 # Get changed versions
-$versionsChanged = Get-VersionsChanged -Versions @( '1.0.0' ) -VersionsNew @( '1.0.1', '1.1.0' ) -AsObject
+$versionsChanged = Get-VersionsChanged -Versions @( '0.1.0' ) -VersionsNew @( '0.1.1', '0.2.0' ) -AsObject
 
-# Open PRs from changed versions
+# Open PR for each changed version
 foreach ($c in $versionsChanged.Values) {
-    if ($c['new']) {
+    if ($c['kind'] -eq 'new') {
         New-DockerImageVariantsPR -Version $c['to'] -Verb add
-    }elseif ($c['update']) {
+    }
+    if ($c['kind'] -eq 'update') {
         New-DockerImageVariantsPR -Version $c['from'] -VersionNew $c['to'] -Verb update
     }
 }
