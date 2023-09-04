@@ -6,7 +6,7 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
 
     function Get-DockerImageVariantsVersions {}
     function Set-DockerImageVariantsVersions {}
-    function New-PR {}
+    function New-DockerImageVariantsPR {}
 
     Context 'Behavior' {
 
@@ -46,13 +46,13 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
         It 'Opens PR with -PR'{
             Mock Get-DockerImageVariantsVersions {}
             Mock Set-DockerImageVariantsVersions {}
-            Mock New-PR {}
+            Mock New-DockerImageVariantsPR {}
 
             Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR 6>$null
 
             Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
             Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 2
-            Assert-MockCalled New-PR -Scope It -Times 2
+            Assert-MockCalled New-DockerImageVariantsPR -Scope It -Times 2
         }
 
     }

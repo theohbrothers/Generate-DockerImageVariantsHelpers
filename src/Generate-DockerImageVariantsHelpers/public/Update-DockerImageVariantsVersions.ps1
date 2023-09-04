@@ -19,7 +19,7 @@ function Update-DockerImageVariantsVersions {
             if (!$DryRun) {
                 Set-DockerImageVariantsVersions $versions
                 if ($PR) {
-                    New-PR -Version $vc['to'] -Verb add
+                    New-DockerImageVariantsPR -Version $vc['to'] -Verb add
                 }
             }
         }elseif ($vc['kind'] -eq 'update') {
@@ -35,7 +35,7 @@ function Update-DockerImageVariantsVersions {
             if (!$DryRun) {
                 Set-DockerImageVariantsVersions $versions
                 if ($PR) {
-                    New-PR -Version $vc['from'] -VersionNew $vc['to'] -Verb update
+                    New-DockerImageVariantsPR -Version $vc['from'] -VersionNew $vc['to'] -Verb update
                 }
             }
         }

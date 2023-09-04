@@ -71,7 +71,8 @@ RequiredModules = @(@{ModuleName = 'Generate-DockerImageVariants'; RequiredVersi
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 FunctionsToExport = 'Execute-Command', 'Get-DockerImageVariantsVersions', 
-               'Get-VersionsChanged', 'New-PR', 'Set-DockerImageVariantsVersions', 
+               'Get-VersionsChanged', 'New-DockerImageVariantsPR', 
+               'Set-DockerImageVariantsVersions', 
                'Update-DockerImageVariantsVersions'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
