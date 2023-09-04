@@ -4,7 +4,27 @@ $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path) -replace '\.Tests\.', '.'
 
 Describe "Set-DockerImageVariantsVersions" {
 
+    Context 'Parameters' {
+
+        It "Errors when -Versions is null" {
+            Mock Set-Content {}
+
+            {
+                Set-DockerImageVariantsVersions -Versions $null
+            } | Should -Throw
+        }
+
+    }
+
     Context 'Behavior' {
+
+        It "Sets version.json (pipeline)" {
+            Mock Set-Content {}
+
+            '0.1.0' | Set-DockerImageVariantsVersions
+
+            Assert-MockCalled Set-Content -Scope It -Times 1
+        }
 
         It "Sets version.json with an empty array" {
             Mock Set-Content {}
