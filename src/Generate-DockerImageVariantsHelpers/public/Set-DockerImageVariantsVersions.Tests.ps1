@@ -34,6 +34,14 @@ Describe "Set-DockerImageVariantsVersions" {
             Assert-MockCalled Set-Content -Scope It -Times 1
         }
 
+        It "Sets version.json with an empty array (first arg)" {
+            Mock Set-Content {}
+
+            Set-DockerImageVariantsVersions @()
+
+            Assert-MockCalled Set-Content -Scope It -Times 1
+        }
+
         It "Sets version.json with a non-empty array" {
             Mock Set-Content {}
 
