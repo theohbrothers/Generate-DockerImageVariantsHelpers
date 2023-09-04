@@ -1,4 +1,5 @@
 function Get-VersionsChanged {
+    [CmdletBinding()]
     param (
         [Parameter(Mandatory)]
         [AllowEmptyCollection()]
@@ -8,10 +9,13 @@ function Get-VersionsChanged {
         [AllowEmptyCollection()]
         [string[]]$VersionsNew
     ,
+        [Parameter()]
         [switch]$AsObject
     ,
+        [Parameter()]
         [switch]$Descending
     )
+
     $Versions = @( $Versions | Select-Object -Unique | Sort-Object { [version]$_ } -Descending )
     $VersionsNew = @( $VersionsNew | Select-Object -Unique | Sort-Object { [version]$_ } -Descending )
 

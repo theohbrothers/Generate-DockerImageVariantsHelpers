@@ -1,11 +1,14 @@
 function New-DockerImageVariantsPR {
     [CmdletBinding()]
     param (
+        [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
         [version]$Version
     ,
+        [Parameter()]
         [version]$VersionNew
     ,
+        [Parameter(Mandatory)]
         [ValidateSet('add', 'update')]
         [string]$Verb
     )
