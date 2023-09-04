@@ -1,16 +1,28 @@
 function Update-DockerImageVariantsVersions {
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName='Default')]
     param (
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory,ParameterSetName='Default')]
         [ValidateNotNullOrEmpty()]
         [System.Collections.Specialized.OrderedDictionary]$VersionsChanged
     ,
         [Parameter(HelpMessage="Whether to perform a dry run (skip writing versions.json")]
+        [Parameter(ParameterSetName='Default')]
+        [Parameter(ParameterSetName='Pipeline')]
         [switch]$DryRun
     ,
         [Parameter(HelpMessage="Whether to open a PR for each updated version in version.json")]
+        [Parameter(ParameterSetName='Default')]
+        [Parameter(ParameterSetName='Pipeline')]
         [switch]$PR
+    ,
+        [Parameter(ValueFromPipeline,ParameterSetName='Pipeline')]
+        [ValidateNotNullOrEmpty()]
+        [System.Collections.Specialized.OrderedDictionary]$InputObject
     )
+
+    if ($InputObject) {
+        $VersionsChanged = $InputObject
+    }
 
     foreach ($vc in $VersionsChanged.Values) {
         if ($vc['kind'] -eq 'new') {
