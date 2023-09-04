@@ -27,9 +27,12 @@ function Update-DockerImageVariantsVersions {
     foreach ($vc in $VersionsChanged.Values) {
         if ($vc['kind'] -eq 'new') {
             "New: $( $vc['to'] )" | Write-Host -ForegroundColor Green
-            $versions = (Get-DockerImageVariantsVersions) + $vc['to']
+            $versions = @(
+                $vc['to']
+                Get-DockerImageVariantsVersions
+            )
             if (!$DryRun) {
-                Set-DockerImageVariantsVersions $versions
+                Set-DockerImageVariantsVersions -Versions $versions
                 if ($PR) {
                     New-DockerImageVariantsPR -Version $vc['to'] -Verb add
                 }
@@ -41,11 +44,11 @@ function Update-DockerImageVariantsVersions {
                     "Update: $( $vc['from'] ) to $( $vc['to'] )" | Write-Host -ForegroundColor Green
                     $versions.Add($vc['to']) > $null
                 }else {
-                    $versions.Add($vc) > $null
+                    $versions.Add($v) > $null
                 }
             }
             if (!$DryRun) {
-                Set-DockerImageVariantsVersions $versions
+                Set-DockerImageVariantsVersions -Versions $versions
                 if ($PR) {
                     New-DockerImageVariantsPR -Version $vc['from'] -VersionNew $vc['to'] -Verb update
                 }

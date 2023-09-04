@@ -66,7 +66,7 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
         }
 
         It 'Opens PR with -PR'{
-            Mock Get-DockerImageVariantsVersions {}
+            Mock Get-DockerImageVariantsVersions { @( '0.1.0' ) }
             Mock Set-DockerImageVariantsVersions {}
             Mock New-DockerImageVariantsPR {}
 
