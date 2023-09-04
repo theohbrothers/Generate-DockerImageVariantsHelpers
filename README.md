@@ -31,9 +31,9 @@ Import-Module Generate-DockerImageVariantsHelpers
 # Execute commands
 Execute-Command 'git status'
 # Get changed versions
-$changedVersions = Get-ChangedVersions -Versions @( '1.0.0' ) -VersionsNew @( '1.0.1', '1.1.0' ) -AsObject
+$versionsChanged = Get-VersionsChanged -Versions @( '1.0.0' ) -VersionsNew @( '1.0.1', '1.1.0' ) -AsObject
 # Open PRs from changed versions
-foreach ($c in $changedVersions.Values) {
+foreach ($c in $versionsChanged.Values) {
     if ($c['new']) {
         New-PR -Version $c['from'] -Verb add
     }elseif ($c['update']) {
