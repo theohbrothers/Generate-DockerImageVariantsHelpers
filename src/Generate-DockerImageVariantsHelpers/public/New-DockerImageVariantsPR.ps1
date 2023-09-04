@@ -38,15 +38,15 @@ function New-DockerImageVariantsPR {
             }
             $COMMIT_MSG = if ($Verb -eq 'add') {
                 @"
-    Enhancement: Add v$( $Version.Major ).$( $Version.Minor ).$( $Version.Build ) variants
+Enhancement: Add v$( $Version.Major ).$( $Version.Minor ).$( $Version.Build ) variants
 
-    Signed-off-by: $( "git config --global user.name" | Execute-Command ) <$( "git config --global user.email" | Execute-Command )>
+Signed-off-by: $( "git config --global user.name" | Execute-Command ) <$( "git config --global user.email" | Execute-Command )>
 "@
             }elseif ($Verb -eq 'update') {
             @"
-    Enhancement: Bump v$( $Version.Major ).$( $Version.Minor ) variants to $( $VersionNew )
+Enhancement: Bump v$( $Version.Major ).$( $Version.Minor ) variants to $( $VersionNew )
 
-    Signed-off-by: $( "git config --global user.name" | Execute-Command ) <$( "git config --global user.email" | Execute-Command )>
+Signed-off-by: $( "git config --global user.name" | Execute-Command ) <$( "git config --global user.email" | Execute-Command )>
 "@
             }
             "git checkout -b $BRANCH" | Execute-Command
@@ -69,7 +69,7 @@ function New-DockerImageVariantsPR {
             # }
             $pr = Get-GitHubPullRequest -OwnerName $owner -RepositoryName $project -AccessToken $env:GITHUB_TOKEN -State open | ? { $_.base.ref -eq 'master'  -and $_.head.ref -eq $BRANCH }
             if (!$pr) {
-                $pr = New-GitHubPullRequest -OwnerName $owner -RepositoryName $project -AccessToken $env:GITHUB_TOKEN -Base master -Head $BRANCH -Title $( "git log --format=%s -1" | Execute-Command ) -Body $( "git log --format=%b -1" | Execute-Command )
+                $pr = New-GitHubPullRequest -OwnerName $owner -RepositoryName $project -AccessToken $env:GITHUB_TOKEN -Base master -Head $BRANCH -Title "$( "git log --format=%s -1" | Execute-Command )" -Body "$( "git log --format=%b -1" | Execute-Command )"
             }
             Update-GitHubIssue -OwnerName $owner -RepositoryName $project -AccessToken $env:GITHUB_TOKEN -Issue $pr.number -Label enhancement -MilestoneNumber $milestone.number
             # gh pr create --head $BRANCH --fill --label enhancement --milestone $milestoneTitle --repo "$( "git remote get-url origin" | Execute-Command )"
