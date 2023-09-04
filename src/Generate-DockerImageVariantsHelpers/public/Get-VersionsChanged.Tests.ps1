@@ -4,12 +4,12 @@ $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path) -replace '\.Tests\.', '.'
 
 Set-StrictMode -Version Latest
 
-Describe "Get-ChangedVersions" {
+Describe "Get-VersionsChanged" {
 
     Context 'Parameters' {
         It "Does not error when no versions are passed" {
-            $changedVersions = Get-ChangedVersions -Versions @() -VersionsNew @()
-            $changedVersions | Should -Be @()
+            $versionsChanged = Get-VersionsChanged -Versions @() -VersionsNew @()
+            $versionsChanged | Should -Be @()
         }
     }
 
@@ -19,18 +19,18 @@ Describe "Get-ChangedVersions" {
             $versions = @()
             $versionsNew = @( '1.0.0' )
 
-            $changedVersions = Get-ChangedVersions -Versions $versions -VersionsNew $versionsNew
+            $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $versionsNew
 
-            $changedVersions | Should -Be $versionsNew
+            $versionsChanged | Should -Be $versionsNew
         }
 
         It "Gets original versions when none changed" {
             $versions = @( '1.0.0' )
             $versionsNew = @( '1.0.0' )
 
-            $changedVersions = Get-ChangedVersions -Versions $versions -VersionsNew $versionsNew
+            $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $versionsNew
 
-            $changedVersions | Should -Be $versions
+            $versionsChanged | Should -Be $versions
         }
 
         $versions = @(
@@ -46,12 +46,12 @@ Describe "Get-ChangedVersions" {
             '2.0.0'
         )
         It "Gets new versions (as strings)" {
-            $changedVersions = Get-ChangedVersions -Versions $versions -VersionsNew $VersionsNew
+            $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $VersionsNew
 
-            $changedVersions | Should -Be $versionsNew
+            $versionsChanged | Should -Be $versionsNew
         }
         It "Gets new versions (as hashtable of objects)" {
-            $expectedChangedVersions = [ordered]@{
+            $expectedVersionsChanged = [ordered]@{
                 '0.0.0'  = @{
                     from = '0.0.0'
                     to = '0.0.0'
@@ -78,13 +78,13 @@ Describe "Get-ChangedVersions" {
                     kind = 'new'
                 }
             }
-            $changedVersions = Get-ChangedVersions -Versions $versions -VersionsNew $VersionsNew -AsObject
+            $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $VersionsNew -AsObject
 
-            @( $changedVersions.Keys ) | Should -Be @( $expectedChangedVersions.Keys )
-            $changedVersions.Keys | % {
-                $changedVersions[$_]['from'] | Should -Be $expectedChangedVersions[$_]['from']
-                $changedVersions[$_]['to'] | Should -Be $expectedChangedVersions[$_]['to']
-                $changedVersions[$_]['kind'] | Should -Be $expectedChangedVersions[$_]['kind']
+            @( $versionsChanged.Keys ) | Should -Be @( $expectedVersionsChanged.Keys )
+            $versionsChanged.Keys | % {
+                $versionsChanged[$_]['from'] | Should -Be $expectedVersionsChanged[$_]['from']
+                $versionsChanged[$_]['to'] | Should -Be $expectedVersionsChanged[$_]['to']
+                $versionsChanged[$_]['kind'] | Should -Be $expectedVersionsChanged[$_]['kind']
             }
         }
 
@@ -92,27 +92,27 @@ Describe "Get-ChangedVersions" {
             $versions = @()
             $versionsNew = @( '0.0.0', '0.1.0', '0.2.0' )
 
-            $changedVersions = Get-ChangedVersions -Versions $versions -VersionsNew $VersionsNew
+            $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $VersionsNew
 
-            $changedVersions | Should -Be $versionsNew
+            $versionsChanged | Should -Be $versionsNew
 
-            $changedVersions = Get-ChangedVersions -Versions $versions -VersionsNew $VersionsNew -AsObject
+            $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $VersionsNew -AsObject
 
-            @( $changedVersions.Keys ) | Should -Be $versionsNew
+            @( $versionsChanged.Keys ) | Should -Be $versionsNew
 
         }
         It "Orders by descending order" {
             $versions = @()
             $versionsNew = @( '0.0.0', '0.1.0', '0.2.0' )
-            $expectedChangedVersions = @( '0.2.0', '0.1.0', '0.0.0' )
+            $expectedVersionsChanged = @( '0.2.0', '0.1.0', '0.0.0' )
 
-            $changedVersions = Get-ChangedVersions -Versions $versions -VersionsNew $VersionsNew -Descending
+            $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $VersionsNew -Descending
 
-            $changedVersions | Should -Be $expectedChangedVersions
+            $versionsChanged | Should -Be $expectedVersionsChanged
 
-            $changedVersions = Get-ChangedVersions -Versions $versions -VersionsNew $VersionsNew -AsObject -Descending
+            $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $VersionsNew -AsObject -Descending
 
-            @( $changedVersions.Keys ) | Should -Be $expectedChangedVersions
+            @( $versionsChanged.Keys ) | Should -Be $expectedVersionsChanged
         }
     }
 

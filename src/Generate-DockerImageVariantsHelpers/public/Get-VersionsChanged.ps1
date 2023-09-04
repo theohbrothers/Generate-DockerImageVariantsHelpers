@@ -1,4 +1,4 @@
-function Get-ChangedVersions {
+function Get-VersionsChanged {
     param (
         [Parameter(Mandatory)]
         [AllowEmptyCollection()]
