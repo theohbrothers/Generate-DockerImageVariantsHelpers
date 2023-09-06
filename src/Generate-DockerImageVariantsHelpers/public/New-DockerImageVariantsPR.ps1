@@ -34,7 +34,7 @@ function New-DockerImageVariantsPR {
             $BRANCH = if ($Verb -eq 'add') {
                 "enhancement/add-v$( $Version.Major ).$( $Version.Minor ).$( $Version.Build )-variants"
             }elseif ($Verb -eq 'update') {
-                "enhancement/bump-v$( $Version.Major ).$( $Version.Minor )-variants-to-$( $VersionNew )"
+                "enhancement/bump-v$( $Version.Major ).$( $Version.Minor )-variants-to-v$( $VersionNew )"
             }
             $COMMIT_MSG = if ($Verb -eq 'add') {
                 @"
@@ -44,7 +44,7 @@ Signed-off-by: $( "git config --global user.name" | Execute-Command ) <$( "git c
 "@
             }elseif ($Verb -eq 'update') {
             @"
-Enhancement: Bump v$( $Version.Major ).$( $Version.Minor ) variants to $( $VersionNew )
+Enhancement: Bump v$( $Version.Major ).$( $Version.Minor ) variants to v$( $VersionNew )
 
 Signed-off-by: $( "git config --global user.name" | Execute-Command ) <$( "git config --global user.email" | Execute-Command )>
 "@
