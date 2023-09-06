@@ -77,7 +77,7 @@ Describe "New-DockerImageVariantsPR" -Tag 'Unit' {
                     ref = 'master'
                 }
                 head = [pscustomobject]@{
-                    ref = "enhancement/bump-v$( $Version.Major ).$( $Version.Minor )-variants-to-$( $VersionNew )"
+                    ref = "enhancement/bump-v$( $Version.Major ).$( $Version.Minor )-variants-to-v$( $VersionNew )"
                 }
             }
         }
