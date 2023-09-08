@@ -23,14 +23,14 @@ function New-DockerImageVariantsPR {
                 }
             }
 
-            { git config --global --add safe.directory $PWD } | Execute-Command
+            { git config --global --add safe.directory $PWD } | Execute-Command | Write-Host
             if (!({ git config --global user.name } | Execute-Command -ErrorAction SilentlyContinue)) {
-                { git config --global user.name "The Oh Brothers Bot" } | Execute-Command
+                { git config --global user.name "The Oh Brothers Bot" } | Execute-Command | Write-Host
             }
             if (!({ git config --global user.email }| Execute-Command -ErrorAction SilentlyContinue)) {
-                { git config --global user.email "bot@theohbrothers.com" } | Execute-Command
+                { git config --global user.email "bot@theohbrothers.com" } | Execute-Command | Write-Host
             }
-            Generate-DockerImageVariants .
+            Generate-DockerImageVariants . | Write-Host
             $BRANCH = if ($Verb -eq 'add') {
                 "enhancement/add-v$( $Version.Major ).$( $Version.Minor ).$( $Version.Build )-variants"
             }elseif ($Verb -eq 'update') {
@@ -49,10 +49,10 @@ Enhancement: Bump v$( $Version.Major ).$( $Version.Minor ) variants to v$( $Vers
 Signed-off-by: $( { git config --global user.name } | Execute-Command ) <$( { git config --global user.email } | Execute-Command )>
 "@
             }
-            { git checkout -b $BRANCH } | Execute-Command
-            { git add . } | Execute-Command
-            { git commit -m "$COMMIT_MSG" } | Execute-Command
-            { git push origin $BRANCH -f } | Execute-Command
+            { git checkout -b $BRANCH } | Execute-Command | Write-Host
+            { git add . } | Execute-Command | Write-Host
+            { git commit -m "$COMMIT_MSG" } | Execute-Command | Write-Host
+            { git push origin $BRANCH -f } | Execute-Command | Write-Host
 
             "Creating PR" | Write-Verbose
             $env:GITHUB_TOKEN = if ($env:GITHUB_TOKEN) { $env:GITHUB_TOKEN } else { (Get-Content ~/.git-credentials -Encoding utf8 -Force) -split "`n" | % { if ($_ -match '^https://[^:]+:([^:]+)@github.com') { $matches[1] } } | Select-Object -First 1 }
@@ -74,7 +74,9 @@ Signed-off-by: $( { git config --global user.name } | Execute-Command ) <$( { gi
             Update-GitHubIssue -OwnerName $owner -RepositoryName $project -AccessToken $env:GITHUB_TOKEN -Issue $pr.number -Label enhancement -MilestoneNumber $milestone.number
             # gh pr create --head $BRANCH --fill --label enhancement --milestone $milestoneTitle --repo "$( { git remote get-url origin } | Execute-Command )"
 
-            { git checkout master } | Execute-Command
+            { git checkout master } | Execute-Command | Write-Host
+
+            $pr  # Return the PR object
         }catch {
             if ($callerEA -eq 'Stop') {
                 throw

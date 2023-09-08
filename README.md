@@ -46,14 +46,16 @@ Set-DockerImageVariantsVersions -Versions @( '0.1.0', '0.2.0' ) -DoubleNewlines
 $versionsChanged = Get-VersionsChanged -Versions @( '0.1.0' ) -VersionsNew @( '0.1.1', '0.2.0' ) -AsObject
 
 # Open PR for each changed version
-foreach ($c in $versionsChanged.Values) {
-    if ($c['kind'] -eq 'new') {
-        New-DockerImageVariantsPR -Version $c['to'] -Verb add
+$prs = @(
+    foreach ($c in $versionsChanged.Values) {
+        if ($c['kind'] -eq 'new') {
+            New-DockerImageVariantsPR -Version $c['to'] -Verb add
+        }
+        if ($c['kind'] -eq 'update') {
+            New-DockerImageVariantsPR -Version $c['from'] -VersionNew $c['to'] -Verb update
+        }
     }
-    if ($c['kind'] -eq 'update') {
-        New-DockerImageVariantsPR -Version $c['from'] -VersionNew $c['to'] -Verb update
-    }
-}
+)
 
 # Update generate/definitions/versions.json and open a PR for each changed version
 Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR
