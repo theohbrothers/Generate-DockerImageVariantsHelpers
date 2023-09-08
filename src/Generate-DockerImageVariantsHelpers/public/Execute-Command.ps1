@@ -13,11 +13,26 @@ function Execute-Command {
         if ($InputObject) {
             $Command = $InputObject
         }
-        Invoke-Expression $Command
-
-        # Honor `-ErrorAction Stop` for non-zero exit code
-        if ($ErrorActionPreference -eq 'Stop' -and $LASTEXITCODE) {
-            throw "Command exit code was $LASTEXITCODE. Command: $Command"
+        $scriptBlock = if ($Command -is [scriptblock]) {
+            $Command
+        }else {
+            # This is like Invoke-Expression, dangerous
+            [scriptblock]::Create($Command)
+        }
+        try {
+            "Command: $scriptBlock" | Write-Verbose
+            Invoke-Command $scriptBlock
+            "LASTEXITCODE: $LASTEXITCODE" | Write-Verbose
+            if ($ErrorActionPreference -eq 'Stop' -and $LASTEXITCODE) {
+                throw "Command exit code was $LASTEXITCODE. Command: $scriptBlock"
+            }
+        }catch {
+            if ($ErrorActionPreference -eq 'Stop') {
+                throw
+            }
+            if ($ErrorActionPreference -eq 'Continue') {
+                $_ | Write-Error
+            }
         }
     }
 }

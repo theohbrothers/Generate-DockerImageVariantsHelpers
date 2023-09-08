@@ -35,7 +35,7 @@ Get-DockerImageVariantsVersions
 Set-DockerImageVariantsVersions -Versions @( '0.1.0', '0.2.0' )
 
 # Execute commands
-'git status' | Execute-Command -ErrorAction Stop
+{ git status } | Execute-Command -ErrorAction Stop
 
 # Get changed versions
 $versionsChanged = Get-VersionsChanged -Versions @( '0.1.0' ) -VersionsNew @( '0.1.1', '0.2.0' ) -AsObject
