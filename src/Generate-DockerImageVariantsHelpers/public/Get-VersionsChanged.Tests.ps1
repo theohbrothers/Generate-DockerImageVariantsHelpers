@@ -33,24 +33,23 @@ Describe "Get-VersionsChanged" {
             $versionsChanged | Should -Be $versions
         }
 
-        $versions = @(
-            '0.0.0'
-            '0.1.0'
-            '1.0.0'
-        )
-        $VersionsNew = @(
-            '0.0.0'
-            '0.1.1'
-            '1.0.1'
-            '1.2.0'
-            '2.0.0'
-        )
-        It "Gets new versions (as strings)" {
+        It "Gets new versions" {
+            $versions = @(
+                '0.0.0'
+                '0.1.0'
+                '1.0.0'
+            )
+            $VersionsNew = @(
+                '0.0.0'
+                '0.1.1'
+                '1.0.1'
+                '1.2.0'
+                '2.0.0'
+            )
             $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $VersionsNew
 
             $versionsChanged | Should -Be $versionsNew
-        }
-        It "Gets new versions (as hashtable of objects)" {
+
             $expectedVersionsChanged = [ordered]@{
                 '0.0.0'  = @{
                     from = '0.0.0'

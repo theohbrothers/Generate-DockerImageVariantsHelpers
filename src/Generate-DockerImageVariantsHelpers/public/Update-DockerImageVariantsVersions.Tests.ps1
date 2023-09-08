@@ -4,11 +4,28 @@ $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path) -replace '\.Tests\.', '.'
 
 Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
 
-    function Get-DockerImageVariantsVersions {}
-    function Set-DockerImageVariantsVersions {}
-    function New-DockerImageVariantsPR {}
+    BeforeEach {
+
+        function Get-DockerImageVariantsVersions {}
+        function Set-DockerImageVariantsVersions {}
+        function New-DockerImageVariantsPR {}
+    }
 
     Context 'Behavior' {
+        BeforeEach {
+            $versionsChanged = [ordered]@{
+                '0.1.1' = @{
+                    from = '0.1.0'
+                    to = '0.1.1'
+                    kind = 'update'
+                }
+                '1.2.0' = @{
+                    from = '1.2.0'
+                    to = '1.2.0'
+                    kind = 'new'
+                }
+            }
+        }
 
         It 'Errors on empty ordered hashtable' {
             $versionsChanged = [ordered]@{}
@@ -20,19 +37,6 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
             {
                 $versionsChanged | Update-DockerImageVariantsVersions -ErrorAction Stop 6>$null
             } | Should -Throw
-        }
-
-        $versionsChanged = [ordered]@{
-            '0.1.1' = @{
-                from = '0.1.0'
-                to = '0.1.1'
-                kind = 'update'
-            }
-            '1.2.0' = @{
-                from = '1.2.0'
-                to = '1.2.0'
-                kind = 'new'
-            }
         }
 
         It 'Updates versions.json (pipeline)' {
