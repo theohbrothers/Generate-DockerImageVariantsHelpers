@@ -7,6 +7,9 @@ function Set-DockerImageVariantsVersions {
     ,
         [Parameter(ValueFromPipeline,ParameterSetName='Pipeline')]
         [object]$InputObject
+    ,
+    [   Parameter(HelpMessage='This adds newlines between lines to prevent git merge conflicts, useful for bot auto-merges')]
+        [switch]$DoubleNewlines
     )
 
     process {
@@ -15,10 +18,11 @@ function Set-DockerImageVariantsVersions {
         }
 
         $VERSIONS_JSON_FILE = "./generate/definitions/versions.json"
-        "Writing $VERSIONS_JSON_FILE" | Write-Host -ForegroundColor Green
-        if ($Versions -is [array]) {
-            $Versions = ,$Versions
+        "Writing $VERSIONS_JSON_FILE" | Write-Verbose
+        $content = ConvertTo-Json $Versions -Depth 100
+        if ($DoubleNewlines) {
+            $content = ($content -replace "`n", "`n`n").Trim()
         }
-        $Versions | ConvertTo-Json -Depth 100 | Set-Content $VERSIONS_JSON_FILE -Encoding utf8
+        $content | Set-Content $VERSIONS_JSON_FILE -Encoding utf8
     }
 }
