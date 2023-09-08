@@ -18,37 +18,69 @@ Describe "Set-DockerImageVariantsVersions" {
 
     Context 'Behavior' {
 
-        It "Sets version.json (pipeline)" {
-            Mock Set-Content {}
+        BeforeEach {
+            Push-Location "TestDrive:\"
+            $VERSIONS_JSON_FILE = "TestDrive:\generate/definitions/versions.json"
+            New-Item (Split-Path $VERSIONS_JSON_FILE -Parent) -ItemType Container
+            # Mock Set-Content {}
+        }
+        AfterEach {
+            Pop-Location
+            # Assert-MockCalled Set-Content -Scope It -Times 1
+            Remove-Item "TestDrive:\generate" -Recurse -Force
+        }
+        It "Sets version.json" {
+            Set-DockerImageVariantsVersions '0.1.0'
+
+            Get-Content $VERSIONS_JSON_FILE -Raw | Should -Be @"
+"0.1.0"
+
+"@
 
             '0.1.0' | Set-DockerImageVariantsVersions
 
-            Assert-MockCalled Set-Content -Scope It -Times 1
-        }
+            Get-Content $VERSIONS_JSON_FILE -Raw | Should -Be @"
+"0.1.0"
 
-        It "Sets version.json with an empty array" {
-            Mock Set-Content {}
-
-            Set-DockerImageVariantsVersions -Versions @()
-
-            Assert-MockCalled Set-Content -Scope It -Times 1
+"@
         }
 
         It "Sets version.json with an empty array (first arg)" {
-            Mock Set-Content {}
-
             Set-DockerImageVariantsVersions @()
 
-            Assert-MockCalled Set-Content -Scope It -Times 1
+            Get-Content $VERSIONS_JSON_FILE -Raw | Should -Be @"
+[]
+
+"@
         }
 
         It "Sets version.json with a non-empty array" {
-            Mock Set-Content {}
-
             Set-DockerImageVariantsVersions -Versions @( '0.1.0', '0.2.0' )
 
-            Assert-MockCalled Set-Content -Scope It -Times 1
+            Get-Content $VERSIONS_JSON_FILE -Raw | Should -Be @"
+[
+  "0.1.0",
+  "0.2.0"
+]
+
+"@
         }
+
+        It "It sets -DoubleNewlines" {
+            Set-DockerImageVariantsVersions -Versions @( '0.1.0', '0.2.0' ) -DoubleNewlines
+
+            Get-Content $VERSIONS_JSON_FILE -Raw | Should -Be @"
+[
+
+  "0.1.0",
+
+  "0.2.0"
+
+]
+
+"@
+        }
+
 
     }
 
