@@ -6,35 +6,39 @@ Get-Module Generate-DockerImageVariants -ErrorAction SilentlyContinue | Remove-M
 Get-Module PowerShellForGitHub -ErrorAction SilentlyContinue | Remove-Module -Force
 
 Describe "New-DockerImageVariantsPR" -Tag 'Unit' {
+    BeforeEach {
 
-    function Execute-Command {}
-    function Generate-DockerImageVariants {}
-    function Set-GitHubConfiguration {}
-    function Get-GitHubMilestone {}
-    function New-GitHubMilestone {}
-    function Get-GitHubPullRequest {}
-    function New-GitHubPullRequest {}
-    function Update-GitHubIssue {}
-    function Get-FakeMilestone {
-        [PSCustomObject]@{
-            title = 'next-release'
-            number = 123
+        function Execute-Command {}
+        function Generate-DockerImageVariants {}
+        function Set-GitHubConfiguration {}
+        function Get-GitHubMilestone {}
+        function New-GitHubMilestone {}
+        function Get-GitHubPullRequest {}
+        function New-GitHubPullRequest {}
+        function Update-GitHubIssue {}
+        function Get-FakeMilestone {
+            [PSCustomObject]@{
+                title = 'next-release'
+                number = 123
+            }
         }
+        $env:GITHUB_TOKEN = 'foo'
+        $version = [version]'1.0.0'
+        $versionNew = [version]'2.0.0'
     }
-    $env:GITHUB_TOKEN = 'foo'
-    $version = [version]'1.0.0'
-    $versionNew = [version]'2.0.0'
 
     Context '-Verb add' {
+        BeforeEach {
 
-        function Get-FakePR {
-            [PSCustomObject]@{
-                number = 123
-                base = [pscustomobject]@{
-                    ref = 'master'
-                }
-                head = [pscustomobject]@{
-                    ref = "enhancement/add-v$version-variants"
+            function Get-FakePR {
+                [PSCustomObject]@{
+                    number = 123
+                    base = [pscustomobject]@{
+                        ref = 'master'
+                    }
+                    head = [pscustomobject]@{
+                        ref = "enhancement/add-v$version-variants"
+                    }
                 }
             }
         }
@@ -70,14 +74,16 @@ Describe "New-DockerImageVariantsPR" -Tag 'Unit' {
 
     Context '-Verb update' {
 
-        function Get-FakePR {
-            [PSCustomObject]@{
-                number = 123
-                base = [pscustomobject]@{
-                    ref = 'master'
-                }
-                head = [pscustomobject]@{
-                    ref = "enhancement/bump-v$( $Version.Major ).$( $Version.Minor )-variants-to-v$( $VersionNew )"
+        BeforeEach {
+            function Get-FakePR {
+                [PSCustomObject]@{
+                    number = 123
+                    base = [pscustomobject]@{
+                        ref = 'master'
+                    }
+                    head = [pscustomobject]@{
+                        ref = "enhancement/bump-v$( $Version.Major ).$( $Version.Minor )-variants-to-v$( $VersionNew )"
+                    }
                 }
             }
         }

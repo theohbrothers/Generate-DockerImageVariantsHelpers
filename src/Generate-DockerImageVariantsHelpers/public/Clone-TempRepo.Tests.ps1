@@ -4,8 +4,11 @@ $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path) -replace '\.Tests\.', '.'
 
 Describe "Clone-TempRepo" {
 
-    function git {}
-    function mktemp {}
+    BeforeEach {
+        function git {}
+        function mktemp {}
+
+    }
 
     Context 'Error handling' {
 
