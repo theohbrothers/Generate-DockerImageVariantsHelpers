@@ -4,23 +4,34 @@ $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path) -replace '\.Tests\.', '.'
 Set-StrictMode -Version latest
 Describe "Execute-Command" -Tag 'Unit' {
 
-    Context 'Error handling' {
-
-        It 'Honors -ErrorAction Stop' {
-            { Execute-Command -Command 'blabla' -ErrorAction Stop } | Should -Throw
-        }
-
-    }
-
     Context 'Behavior' {
 
-        It 'Executes command (pipeline)' {
-            'hostname' | Execute-Command > $null
+        It 'Executes expressions' {
+            Execute-Command -Command 123 | Should -Be 123
+            Execute-Command -Command { 123 } | Should -Be 123
+            123 | Execute-Command | Should -Be 123
+            { 123 } | Execute-Command | Should -Be 123
         }
 
-        It 'Executes command' {
-            Execute-Command 'hostname' > $null
+        It 'Execute binaries' {
             Execute-Command -Command 'hostname' > $null
+            Execute-Command -Command { hostname } > $null
+            'hostname' | Execute-Command > $null
+            { hostname } | Execute-Command > $null
+        }
+
+        It 'Errors (non-terminating) when binary return non-zero exit code' {
+            'ping' | Execute-Command -ErrorAction Continue 2>$null
+            { ping } | Execute-Command -ErrorAction Continue 2>$null
+        }
+
+        It 'Errors (terminating) when binary return non-zero exit code' {
+            {
+                'ping' | Execute-Command -ErrorAction Stop 2>$null
+            } | Should -Throw
+            {
+                { ping } | Execute-Command -ErrorAction Stop 2>$null
+            } | Should -Throw
         }
 
     }
