@@ -6,6 +6,7 @@ function Automerge-DockerImageVariantsPR {
     )
 
     try {
+        $ErrorActionPreference = 'Stop'
         $env:GITHUB_TOKEN = if ($env:GITHUB_TOKEN) { $env:GITHUB_TOKEN } else { (Get-Content ~/.git-credentials -Encoding utf8 -Force) -split "`n" | % { if ($_ -match '^https://[^:]+:([^:]+)@github.com') { $matches[1] } } | Select-Object -First 1 }
         $headers = @{
             'Accept' = 'application/vnd.github+json'
@@ -17,6 +18,10 @@ function Automerge-DockerImageVariantsPR {
             $commitsDiff = Invoke-RestMethod -Method GET -Headers $headers -Uri "https://api.github.com/repos/$( $pr.base.repo.full_name )/compare/$( $pr.base.ref )...$( $pr.head.sha )"
             if ($commitsDiff.behind_by -gt 0) {
                 "PR behind_by: $( $commitsDiff.behind_by ) commits. Rebasing PR" | Write-Host
+                Execute-Command { git checkout $pr.head.ref }
+                Execute-Command { git fetch origin master }
+                Execute-Command { git rebase origin/master }
+                Execute-Command { git push origin $pr.head.ref -f }
             }else {
                 "PR html_url: $( $pr.html_url )" | Write-Host
                 "PR state: $( $pr.state )" | Write-Host
