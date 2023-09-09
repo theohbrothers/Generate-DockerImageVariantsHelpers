@@ -36,7 +36,7 @@ function Automerge-DockerImageVariantsPR {
                     throw "Skip merging PR because it is not mergeable"
                 }
                 if ($pr.mergeable -and $checkSuiteMostRecent.status -eq 'completed' -and $checkSuiteMostRecent.conclusion -eq 'success') { # Successful PR HEAD pipeline
-                    "Merging PR" | Write-Host
+                    "Merging PR" | Write-Host -ForegroundColor Green
                     $prMerge = Invoke-RestMethod -Method PUT -Headers $headers -Uri "https://api.github.com/repos/$( $pr.base.repo.full_name )/pulls/$( $pr.number )/merge" -Body (@{
                         sha = $pr.head.sha
                         merge_method = 'merge'
@@ -49,7 +49,7 @@ function Automerge-DockerImageVariantsPR {
                     throw "Check suite failed. Skip merging"
                 }
             }
-            "Checking again in 5 seconds"
+            "Checking again in 5 seconds" | Write-Host
             Start-Sleep -Seconds 5
         }
         $pr = Invoke-RestMethod -Method GET -Headers $headers -Uri "https://api.github.com/repos/$( $pr.base.repo.full_name )/pulls/$( $pr.number )"
