@@ -6,6 +6,10 @@ Describe "Execute-Command" -Tag 'Unit' {
 
     Context 'Behavior' {
 
+        BeforeEach {
+            $global:LASTEXITCODE = 0
+        }
+        
         It 'Executes expressions' {
             Execute-Command -Command 123 | Should -Be 123
             Execute-Command -Command { 123 } | Should -Be 123
