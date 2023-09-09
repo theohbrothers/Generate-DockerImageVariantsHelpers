@@ -15,7 +15,7 @@ function Update-DockerImageVariantsVersions {
         [Parameter(ParameterSetName='Pipeline')]
         [switch]$PR
     ,
-        [Parameter(HelpMessage="Whether to open and merge each PR one at a time (note that this is not GitHub merge queue which cannot handle merge conflicts). The queue ensures each PR is rebased to prevent merge conflicts.")]
+        [Parameter(HelpMessage="Whether to merge each PR one after another (note that this is not GitHub merge queue which cannot handle merge conflicts). The queue ensures each PR is rebased to prevent merge conflicts.")]
         [Parameter(ParameterSetName='Default')]
         [Parameter(ParameterSetName='Pipeline')]
         [switch]$AutoMergeQueue
@@ -62,7 +62,7 @@ function Update-DockerImageVariantsVersions {
         }
     }
 
-    if ($AutoMergeQueue) {
+    if (!$DryRun -and $PR -and $AutoMergeQueue) {
         $autoMergeResults = [ordered]@{
             AllPRs = @()
             FailPRNumbers = @()

@@ -58,6 +58,8 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
 
             Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
             Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 2
+            Assert-MockCalled New-DockerImageVariantsPR -Scope It -Times 0
+            Assert-MockCalled Automerge-DockerImageVariantsPR -Scope It -Times 0
         }
 
         It 'Updates versions.json' {
@@ -65,6 +67,8 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
 
             Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
             Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 2
+            Assert-MockCalled New-DockerImageVariantsPR -Scope It -Times 0
+            Assert-MockCalled Automerge-DockerImageVariantsPR -Scope It -Times 0
         }
 
         It 'Skips updating versions.json with -DryRun' {
@@ -72,6 +76,8 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
 
             Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
             Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 0
+            Assert-MockCalled New-DockerImageVariantsPR -Scope It -Times 0
+            Assert-MockCalled Automerge-DockerImageVariantsPR -Scope It -Times 0
         }
 
         It 'Opens PRs with -PR' {
@@ -80,6 +86,7 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
             Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
             Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 2
             Assert-MockCalled New-DockerImageVariantsPR -Scope It -Times 2
+            Assert-MockCalled Automerge-DockerImageVariantsPR -Scope It -Times 0
             $prs -is [array] | Should -Be $true
             $prs.Count | Should -Be 2
         }
@@ -114,6 +121,15 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
             $autoMergeResults['AllPRs'].Count | Should -Be 2
             $autoMergeResults['FailPRNumbers'].Count | Should -Be 2
             $autoMergeResults['FailCount'] | Should -Be 2
+        }
+
+        It 'Does not perform -PR and -AutoMergeQueue if -DryRun is specified' {
+            $autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -DryRun 6>$null 2>$null 3>$null
+
+            Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
+            Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 0
+            Assert-MockCalled New-DockerImageVariantsPR -Scope It -Times 0
+            Assert-MockCalled Automerge-DockerImageVariantsPR -Scope It -Times 0
         }
 
     }
