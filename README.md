@@ -56,6 +56,10 @@ $prs = @(
         }
     }
 )
+# Merge each successful PR one after another
+foreach ($pr in $prs) {
+    $pr = Automerge-DockerImageVariantsPR -PR $pr
+}
 
 # Update generate/definitions/versions.json and open a PR for each changed version
 Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR
