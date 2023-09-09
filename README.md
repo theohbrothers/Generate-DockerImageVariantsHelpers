@@ -61,6 +61,6 @@ foreach ($pr in $prs) {
     $pr = Automerge-DockerImageVariantsPR -PR $pr
 }
 
-# Update generate/definitions/versions.json and open a PR for each changed version, and successful PRs one after another (to prevent merge conflicts)
+# Update generate/definitions/versions.json and open a PR for each changed version, and merge successful PRs one after another (to prevent merge conflicts)
 $autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue
 ```
