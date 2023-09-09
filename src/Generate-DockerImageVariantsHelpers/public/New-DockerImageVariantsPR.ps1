@@ -23,6 +23,7 @@ function New-DockerImageVariantsPR {
                 }
             }
 
+            "Creating PR branch for version $versionNew" | Write-Host -Foreground Green
             { git config --global --add safe.directory $PWD } | Execute-Command | Write-Host
             if (!({ git config --global user.name } | Execute-Command -ErrorAction SilentlyContinue)) {
                 { git config --global user.name "The Oh Brothers Bot" } | Execute-Command | Write-Host
