@@ -50,7 +50,7 @@ Describe "New-DockerImageVariantsPR" -Tag 'Unit' {
             Mock Get-GitHubPullRequest {}
             Mock New-GitHubPullRequest { Get-FakePR }
 
-            $pr = New-DockerImageVariantsPR -Version $version -Verb add -ErrorAction Stop
+            $pr = New-DockerImageVariantsPR -Version $version -Verb add -ErrorAction Stop 6>$null
 
             Assert-MockCalled Get-GitHubMilestone -Scope It -Times 1
             Assert-MockCalled New-GitHubMilestone -Scope It -Times 1
@@ -65,7 +65,7 @@ Describe "New-DockerImageVariantsPR" -Tag 'Unit' {
             Mock Get-GitHubPullRequest { Get-FakePR }
             Mock New-GitHubPullRequest {}
 
-            $pr = New-DockerImageVariantsPR -Version $version -Verb add -ErrorAction Stop
+            $pr = New-DockerImageVariantsPR -Version $version -Verb add -ErrorAction Stop 6>$null
 
             Assert-MockCalled Get-GitHubMilestone -Scope It -Times 1
             Assert-MockCalled New-GitHubMilestone -Scope It -Times 0
@@ -97,7 +97,7 @@ Describe "New-DockerImageVariantsPR" -Tag 'Unit' {
             Mock Get-GitHubPullRequest {}
             Mock New-GitHubPullRequest { Get-FakePR }
 
-            $pr = New-DockerImageVariantsPR -Version $version -VersionNew $VersionNew -Verb update -ErrorAction Stop
+            $pr = New-DockerImageVariantsPR -Version $version -VersionNew $VersionNew -Verb update -ErrorAction Stop 6>$null
 
             Assert-MockCalled Get-GitHubMilestone -Scope It -Times 1
             Assert-MockCalled New-GitHubMilestone -Scope It -Times 1
@@ -112,7 +112,7 @@ Describe "New-DockerImageVariantsPR" -Tag 'Unit' {
             Mock Get-GitHubPullRequest { Get-FakePR }
             Mock New-GitHubPullRequest {}
 
-            $pr = New-DockerImageVariantsPR -Version $version -VersionNew $VersionNew -Verb update -ErrorAction Stop
+            $pr = New-DockerImageVariantsPR -Version $version -VersionNew $VersionNew -Verb update -ErrorAction Stop 6>$null
 
             Assert-MockCalled Get-GitHubMilestone -Scope It -Times 1
             Assert-MockCalled New-GitHubMilestone -Scope It -Times 0
