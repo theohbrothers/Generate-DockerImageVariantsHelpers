@@ -15,6 +15,11 @@ function Update-DockerImageVariantsVersions {
         [Parameter(ParameterSetName='Pipeline')]
         [switch]$PR
     ,
+        [Parameter(HelpMessage="Whether to open and merge each PR one at a time (note that this is not GitHub merge queue which cannot handle merge conflicts). The queue ensures each PR is rebased to prevent merge conflicts.")]
+        [Parameter(ParameterSetName='Default')]
+        [Parameter(ParameterSetName='Pipeline')]
+        [switch]$AutoMergeQueue
+    ,
         [Parameter(ValueFromPipeline,ParameterSetName='Pipeline')]
         [ValidateNotNullOrEmpty()]
         [System.Collections.Specialized.OrderedDictionary]$InputObject
@@ -24,6 +29,7 @@ function Update-DockerImageVariantsVersions {
         $VersionsChanged = $InputObject
     }
 
+    $prs = @()
     foreach ($vc in $VersionsChanged.Values) {
         if ($vc['kind'] -eq 'new') {
             "New: $( $vc['to'] )" | Write-Host -ForegroundColor Green
@@ -34,7 +40,7 @@ function Update-DockerImageVariantsVersions {
             if (!$DryRun) {
                 Set-DockerImageVariantsVersions -Versions $versions -DoubleNewlines
                 if ($PR) {
-                    New-DockerImageVariantsPR -Version $vc['to'] -Verb add
+                    $prs += New-DockerImageVariantsPR -Version $vc['to'] -Verb add
                 }
             }
         }elseif ($vc['kind'] -eq 'update') {
@@ -50,9 +56,41 @@ function Update-DockerImageVariantsVersions {
             if (!$DryRun) {
                 Set-DockerImageVariantsVersions -Versions $versions -DoubleNewlines
                 if ($PR) {
-                    New-DockerImageVariantsPR -Version $vc['from'] -VersionNew $vc['to'] -Verb update
+                    $prs += New-DockerImageVariantsPR -Version $vc['from'] -VersionNew $vc['to'] -Verb update
                 }
             }
         }
+    }
+
+    if ($AutoMergeQueue) {
+        $autoMergeResults = [ordered]@{
+            AllPRs = @()
+            FailPRNumbers = @()
+            FailCount = 0
+        }
+        for ($i = 0; $i -lt $prs.Count; $i++) {
+            $_pr = $prs[$i]
+            try {
+                $autoMergeResults['AllPRs'] += Automerge-DockerImageVariantsPR -PR $prs[$i]
+                "Automerge succeeded for PR #$( $_pr.number )" | Write-Host -ForegroundColor Green
+            }catch {
+                "Automerge failed for PR #$( $_pr.number )" | Write-Warning
+                $autoMergeResults['AllPRs'] += $_pr
+                $autoMergeResults['FailPRNumbers'] += $prs[$i].number
+                $autoMergeResults['FailCount']++
+            }
+        }
+        if ($autoMergeResults['FailCount']) {
+            $msg = "$( $autoMergeResults['FailCount'] ) PRs failed to merge. PRs: $( ($autoMergeResults['PRs'] | % { "#$_" }) -join ', ' )"
+            if ($ErrorActionPreference -eq 'Stop') {
+                throw $msg
+            }
+            if ($ErrorActionPreference -eq 'Continue') {
+                $msg | Write-Error
+            }
+        }
+        $autoMergeResults   # Return the results
+    }else {
+        ,$prs
     }
 }
