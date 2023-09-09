@@ -71,7 +71,8 @@ function Update-DockerImageVariantsVersions {
         for ($i = 0; $i -lt $prs.Count; $i++) {
             $_pr = $prs[$i]
             try {
-                $autoMergeResults['AllPRs'] += Automerge-DockerImageVariantsPR -PR $prs[$i]
+                "Will automerge PR #$( $_pr.number )" | Write-Host -ForegroundColor Green
+                $autoMergeResults['AllPRs'] += Automerge-DockerImageVariantsPR -PR $_pr
                 "Automerge succeeded for PR #$( $_pr.number )" | Write-Host -ForegroundColor Green
             }catch {
                 "Automerge failed for PR #$( $_pr.number )" | Write-Warning
