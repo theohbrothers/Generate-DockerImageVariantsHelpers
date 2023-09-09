@@ -9,6 +9,7 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
         function Get-DockerImageVariantsVersions {}
         function Set-DockerImageVariantsVersions {}
         function New-DockerImageVariantsPR {}
+        function Automerge-DockerImageVariantsPR {}
     }
 
     Context 'Behavior' {
@@ -23,6 +24,19 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
                     from = '1.2.0'
                     to = '1.2.0'
                     kind = 'new'
+                }
+            }
+            Mock Get-DockerImageVariantsVersions { @( '0.1.0' ) }
+            Mock Set-DockerImageVariantsVersions {}
+            Mock New-DockerImageVariantsPR {
+                [PSCustomObject]@{
+                    number = 123
+                }
+            }
+            Mock Automerge-DockerImageVariantsPR {
+                [PSCustomObject]@{
+                    number = 123
+                    merged = $true
                 }
             }
         }
@@ -40,9 +54,6 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
         }
 
         It 'Updates versions.json (pipeline)' {
-            Mock Get-DockerImageVariantsVersions { @( '0.1.0' ) }
-            Mock Set-DockerImageVariantsVersions {}
-
             $versionsChanged | Update-DockerImageVariantsVersions 6>$null
 
             Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
@@ -50,35 +61,59 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
         }
 
         It 'Updates versions.json' {
-            Mock Get-DockerImageVariantsVersions { @( '0.1.0' ) }
-            Mock Set-DockerImageVariantsVersions {}
-
             Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged 6>$null
 
             Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
             Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 2
         }
 
-        It 'Skips updating versions.json with -DryRun'{
-            Mock Get-DockerImageVariantsVersions { @( '0.1.0' ) }
-            Mock Set-DockerImageVariantsVersions {}
-
+        It 'Skips updating versions.json with -DryRun' {
             Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -DryRun 6>$null
 
             Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
             Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 0
         }
 
-        It 'Opens PR with -PR'{
-            Mock Get-DockerImageVariantsVersions { @( '0.1.0' ) }
-            Mock Set-DockerImageVariantsVersions {}
-            Mock New-DockerImageVariantsPR {}
-
-            Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR 6>$null
+        It 'Opens PRs with -PR' {
+            $prs = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR 6>$null
 
             Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
             Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 2
             Assert-MockCalled New-DockerImageVariantsPR -Scope It -Times 2
+            $prs -is [array] | Should -Be $true
+            $prs.Count | Should -Be 2
+        }
+
+        It 'Automerges some PRs (success)' {
+            $autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue 6>$null
+
+            Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
+            Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 2
+            Assert-MockCalled New-DockerImageVariantsPR -Scope It -Times 2
+            Assert-MockCalled Automerge-DockerImageVariantsPR -Scope It -Times 2
+            $autoMergeResults | Should -BeOfType [System.Collections.Specialized.OrderedDictionary]
+            $autoMergeResults['AllPRs'] | % { $_ | Should -BeOfType [PSCustomObject] }
+            $autoMergeResults['AllPRs'].Count | Should -Be 2
+            $autoMergeResults['FailPRNumbers'].Count | Should -Be 0
+            $autoMergeResults['FailCount'] | Should -Be 0
+        }
+
+        It 'Automerges some PRs (fail)' {
+            Mock Automerge-DockerImageVariantsPR {
+                throw "Failed to merge!"
+            }
+
+            $autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue 6>$null 2>$null 3>$null
+
+            Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
+            Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 2
+            Assert-MockCalled New-DockerImageVariantsPR -Scope It -Times 2
+            Assert-MockCalled Automerge-DockerImageVariantsPR -Scope It -Times 2
+            $autoMergeResults | Should -BeOfType [System.Collections.Specialized.OrderedDictionary]
+            $autoMergeResults['AllPRs'] | % { $_ | Should -BeOfType [PSCustomObject] }
+            $autoMergeResults['AllPRs'].Count | Should -Be 2
+            $autoMergeResults['FailPRNumbers'].Count | Should -Be 2
+            $autoMergeResults['FailCount'] | Should -Be 2
         }
 
     }
