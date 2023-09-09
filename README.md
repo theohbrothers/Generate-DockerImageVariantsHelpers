@@ -37,7 +37,6 @@ Get-DockerImageVariantsVersions
 
 # Set generate/definitions/versions.json
 Set-DockerImageVariantsVersions -Versions @( '0.1.0', '0.2.0' )
-Set-DockerImageVariantsVersions -Versions @( '0.1.0', '0.2.0' ) -DoubleNewlines
 
 # Execute commands
 { git status } | Execute-Command -ErrorAction Stop
