@@ -54,7 +54,7 @@ Signed-off-by: $( { git config --global user.name } | Execute-Command ) <$( { gi
             { git commit -m "$COMMIT_MSG" } | Execute-Command | Write-Host
             { git push origin $BRANCH -f } | Execute-Command | Write-Host
 
-            "Creating PR" | Write-Verbose
+            "Creating PR" | Write-Host -Foreground Green
             $env:GITHUB_TOKEN = if ($env:GITHUB_TOKEN) { $env:GITHUB_TOKEN } else { (Get-Content ~/.git-credentials -Encoding utf8 -Force) -split "`n" | % { if ($_ -match '^https://[^:]+:([^:]+)@github.com') { $matches[1] } } | Select-Object -First 1 }
             $owner = ({ git remote get-url origin } | Execute-Command) -replace 'https://github.com/([^/]+)/([^/]+)', '$1'
             $project = ({ git remote get-url origin } | Execute-Command) -replace 'https://github.com/([^/]+)/([^/]+)', '$2' -replace '\.git$', ''
@@ -71,6 +71,7 @@ Signed-off-by: $( { git config --global user.name } | Execute-Command ) <$( { gi
             if (!$pr) {
                 $pr = New-GitHubPullRequest -OwnerName $owner -RepositoryName $project -AccessToken $env:GITHUB_TOKEN -Base master -Head $BRANCH -Title "$( { git log --format=%s -1 } | Execute-Command )" -Body "$( { git log --format=%b -1 } | Execute-Command )"
             }
+            "Updating PR #$( $pr.number )" | Write-Host -Foreground Green
             Update-GitHubIssue -OwnerName $owner -RepositoryName $project -AccessToken $env:GITHUB_TOKEN -Issue $pr.number -Label enhancement -MilestoneNumber $milestone.number
             # gh pr create --head $BRANCH --fill --label enhancement --milestone $milestoneTitle --repo "$( { git remote get-url origin } | Execute-Command )"
 
