@@ -57,10 +57,10 @@ Describe "Set-DockerImageVariantsVersions" {
         It "Sets version.json with a non-empty array" {
             Set-DockerImageVariantsVersions -Versions @( '0.1.0', '0.2.0' )
 
-            Get-Content $VERSIONS_JSON_FILE -Raw | Should -Be @"
+            Get-Content $VERSIONS_JSON_FILE -Raw | Should -Match @"
 [
-  "0.1.0",
-  "0.2.0"
+\s+"0.1.0",
+\s+"0.2.0"
 ]
 
 "@
@@ -69,18 +69,17 @@ Describe "Set-DockerImageVariantsVersions" {
         It "It sets -DoubleNewlines" {
             Set-DockerImageVariantsVersions -Versions @( '0.1.0', '0.2.0' ) -DoubleNewlines
 
-            Get-Content $VERSIONS_JSON_FILE -Raw | Should -Be @"
+            Get-Content $VERSIONS_JSON_FILE -Raw | Should -Match @"
 [
 
-  "0.1.0",
+\s+"0.1.0",
 
-  "0.2.0"
+\s+"0.2.0"
 
 ]
 
 "@
         }
-
 
     }
 

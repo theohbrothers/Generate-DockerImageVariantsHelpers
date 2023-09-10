@@ -4,7 +4,7 @@ $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path) -replace '\.Tests\.', '.'
 
 Set-StrictMode -Version Latest
 
-Describe "Get-VersionsChanged" {
+Describe "Get-VersionsChanged" -Tag 'Unit' {
 
     Context 'Parameters' {
         It "Does not error when no versions are passed" {

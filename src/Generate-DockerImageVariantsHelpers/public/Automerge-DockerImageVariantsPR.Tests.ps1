@@ -2,8 +2,9 @@ $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path) -replace '\.Tests\.', '.'
 . "$here\$sut"
 
-Describe "Automerge-DockerImageVariantsPR" {
+Describe "Automerge-DockerImageVariantsPR" -Tag 'Unit' {
     BeforeEach {
+        $env:GITHUB_TOKEN = 'foo'
         $pr = [PSCustomObject]@{
             number = 123
             base = [pscustomobject]@{
