@@ -5,11 +5,6 @@ function Update-DockerImageVariantsVersions {
         [ValidateNotNullOrEmpty()]
         [System.Collections.Specialized.OrderedDictionary]$VersionsChanged
     ,
-        [Parameter(HelpMessage="Whether to perform a dry run (skip writing versions.json")]
-        [Parameter(ParameterSetName='Default')]
-        [Parameter(ParameterSetName='Pipeline')]
-        [switch]$DryRun
-    ,
         [Parameter(HelpMessage="Whether to open a PR for each updated version in version.json")]
         [Parameter(ParameterSetName='Default')]
         [Parameter(ParameterSetName='Pipeline')]
@@ -19,6 +14,11 @@ function Update-DockerImageVariantsVersions {
         [Parameter(ParameterSetName='Default')]
         [Parameter(ParameterSetName='Pipeline')]
         [switch]$AutoMergeQueue
+    ,
+        [Parameter(HelpMessage="Whether to perform a dry run")]
+        [Parameter(ParameterSetName='Default')]
+        [Parameter(ParameterSetName='Pipeline')]
+        [switch]$WhatIf
     ,
         [Parameter(ValueFromPipeline,ParameterSetName='Pipeline')]
         [ValidateNotNullOrEmpty()]
@@ -37,7 +37,7 @@ function Update-DockerImageVariantsVersions {
                 $vc['to']
                 Get-DockerImageVariantsVersions
             )
-            if (!$DryRun) {
+            if (!$WhatIf) {
                 Set-DockerImageVariantsVersions -Versions $versions
                 if ($PR) {
                     $prs += New-DockerImageVariantsPR -Version $vc['to'] -Verb add
@@ -53,7 +53,7 @@ function Update-DockerImageVariantsVersions {
                     $versions.Add($v) > $null
                 }
             }
-            if (!$DryRun) {
+            if (!$WhatIf) {
                 Set-DockerImageVariantsVersions -Versions $versions
                 if ($PR) {
                     $prs += New-DockerImageVariantsPR -Version $vc['from'] -VersionNew $vc['to'] -Verb update
@@ -62,7 +62,8 @@ function Update-DockerImageVariantsVersions {
         }
     }
 
-    if (!$DryRun -and $PR -and $AutoMergeQueue) {
+    if (!$WhatIf -and $PR -and $AutoMergeQueue) {
+        "Will automerge all PRs" | Write-Host -ForegroundColor Green
         $autoMergeResults = [ordered]@{
             AllPRs = @()
             FailPRNumbers = @()
