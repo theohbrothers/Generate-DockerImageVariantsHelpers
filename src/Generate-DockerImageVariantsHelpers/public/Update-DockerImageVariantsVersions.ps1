@@ -33,6 +33,12 @@ function Update-DockerImageVariantsVersions {
                 $VersionsChanged = $InputObject
             }
 
+            $changedCount = ($versionsChanged.Values | ? { $_['kind'] -ne 'existing' } | Measure-Object).Count
+            if ($changedCount -eq 0) {
+                "No changed versions. Nothing to do" | Write-Host -ForegroundColor Green
+                return
+            }
+
             $prs = @()
             foreach ($vc in $VersionsChanged.Values) {
                 if ($vc['kind'] -eq 'new') {
