@@ -93,7 +93,7 @@ Signed-off-by: $( { git config --global user.name } | Execute-Command ) <$( { gi
             if ($callerEA -eq 'Stop') {
                 throw
             }elseif ($callerEA -eq 'Continue') {
-                $_ | Write-Error
+                $_ | Write-Error -ErrorAction Continue
             }
         }
     }

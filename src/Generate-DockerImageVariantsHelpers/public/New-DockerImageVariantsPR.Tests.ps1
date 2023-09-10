@@ -44,6 +44,26 @@ Describe "New-DockerImageVariantsPR" -Tag 'Unit' {
             }
         }
 
+        It 'Errors (non-terminating)' {
+            Mock Get-GitHubMilestone {
+                throw "some exception"
+            }
+
+            New-DockerImageVariantsPR -Version $version -Verb add -ErrorVariable err 2>$null 6>$null
+
+            $err | Should -Not -Be $null
+        }
+
+        It 'Errors (terminating)' {
+            Mock Get-GitHubMilestone {
+                throw "some exception"
+            }
+
+            {
+                New-DockerImageVariantsPR -Version $version -Verb add -ErrorAction Stop 6>$null
+            } | Should -Throw "some exception"
+        }
+
         It 'Creates new milestone and PR' {
             Mock Get-GitHubMilestone {}
             Mock New-GitHubMilestone { Get-FakeMilestone }
