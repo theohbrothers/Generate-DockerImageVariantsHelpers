@@ -45,6 +45,9 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
                     merged = $true
                 }
             }
+            Mock New-Release {
+                '20230910.0.0'
+            }
         }
 
         It 'Errors on empty ordered hashtable' {
@@ -66,6 +69,7 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
             Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 2
             Assert-MockCalled New-DockerImageVariantsPR -Scope It -Times 0
             Assert-MockCalled Automerge-DockerImageVariantsPR -Scope It -Times 0
+            Assert-MockCalled New-Release -Scope It -Times 0
         }
 
         It 'Updates versions.json' {
@@ -75,6 +79,7 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
             Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 2
             Assert-MockCalled New-DockerImageVariantsPR -Scope It -Times 0
             Assert-MockCalled Automerge-DockerImageVariantsPR -Scope It -Times 0
+            Assert-MockCalled New-Release -Scope It -Times 0
         }
 
         It 'Opens PRs with -PR' {
@@ -84,6 +89,7 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
             Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 2
             Assert-MockCalled New-DockerImageVariantsPR -Scope It -Times 2
             Assert-MockCalled Automerge-DockerImageVariantsPR -Scope It -Times 0
+            Assert-MockCalled New-Release -Scope It -Times 0
             $prs -is [array] | Should -Be $true
             $prs.Count | Should -Be 2
         }
@@ -95,6 +101,7 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
             Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 2
             Assert-MockCalled New-DockerImageVariantsPR -Scope It -Times 2
             Assert-MockCalled Automerge-DockerImageVariantsPR -Scope It -Times 2
+            Assert-MockCalled New-Release -Scope It -Times 0
             $autoMergeResults | Should -BeOfType [System.Collections.Specialized.OrderedDictionary]
             $autoMergeResults['AllPRs'] | % { $_ | Should -BeOfType [PSCustomObject] }
             $autoMergeResults['AllPRs'].Count | Should -Be 2
@@ -113,6 +120,7 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
             Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 2
             Assert-MockCalled New-DockerImageVariantsPR -Scope It -Times 2
             Assert-MockCalled Automerge-DockerImageVariantsPR -Scope It -Times 2
+            Assert-MockCalled New-Release -Scope It -Times 0
             $autoMergeResults | Should -BeOfType [System.Collections.Specialized.OrderedDictionary]
             $autoMergeResults['AllPRs'] | % { $_ | Should -BeOfType [PSCustomObject] }
             $autoMergeResults['AllPRs'].Count | Should -Be 2
@@ -120,17 +128,31 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
             $autoMergeResults['FailCount'] | Should -Be 2
         }
 
-        It 'Automerges some PRs (success) (-WhatIf)' {
+        It 'Automerges some PRs and autoreleases' {
+            $returns = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -AutoRelease 6>$null
+
+            Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
+            Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 2
+            Assert-MockCalled New-DockerImageVariantsPR -Scope It -Times 2
+            Assert-MockCalled Automerge-DockerImageVariantsPR -Scope It -Times 2
+            Assert-MockCalled New-Release -Scope It -Times 1
+            $returns[0] | Should -BeOfType [System.Collections.Specialized.OrderedDictionary]
+            $returns[1] | Should -Be (New-Release)
+        }
+
+        It 'Automerges some PRs and autoreleases (-WhatIf)' {
             Mock Set-DockerImageVariantsVersions {} #-ParameterFilter { $Versions -and $WhatIf }
             Mock New-DockerImageVariantsPR {} #-ParameterFilter { $Version -and $Verb -and $WhatIf }
             Mock Automerge-DockerImageVariantsPR {} #-ParameterFilter { $PR -and $WhatIf }
+            Mock New-Release {} #-ParameterFilter { $PR -and $WhatIf }
 
-            $prs = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -WhatIf -ErrorVariable err 6>$null
+            $prs = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -AutoRelease -WhatIf -ErrorVariable err 6>$null
 
             Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
             Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 2 #-ParameterFilter { $Versions -and $WhatIf }
             Assert-MockCalled New-DockerImageVariantsPR -Scope It -Times 2 #-ParameterFilter { $Version -and $Verb -and $WhatIf }
             Assert-MockCalled Automerge-DockerImageVariantsPR -Scope It -Times 0 #-ParameterFilter { $PR -and $WhatIf }
+            Assert-MockCalled New-Release -Scope It -Times 0 #-ParameterFilter { $WhatIf }
             $prs | Should -Be $null
             $err | Should -Be $null
         }

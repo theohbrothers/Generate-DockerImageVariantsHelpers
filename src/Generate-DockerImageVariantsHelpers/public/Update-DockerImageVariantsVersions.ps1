@@ -15,6 +15,11 @@ function Update-DockerImageVariantsVersions {
         [Parameter(ParameterSetName='Pipeline')]
         [switch]$AutoMergeQueue
     ,
+        [Parameter(HelpMessage="Whether to create a tagged release and closing milestone, after merging all PRs")]
+        [Parameter(ParameterSetName='Default')]
+        [Parameter(ParameterSetName='Pipeline')]
+        [switch]$AutoRelease
+    ,
         [Parameter(ValueFromPipeline,ParameterSetName='Pipeline')]
         [ValidateNotNullOrEmpty()]
         [System.Collections.Specialized.OrderedDictionary]$InputObject
@@ -86,6 +91,14 @@ function Update-DockerImageVariantsVersions {
         }
         if ($PSCmdlet.ShouldProcess("Result of merged PRs", 'return')) {
             $autoMergeResults   # Return the results
+        }
+        if ($AutoRelease) {
+            if ($PSCmdlet.ShouldProcess("autorelease", 'create')) {
+                $tag = New-Release
+            }
+            if ($PSCmdlet.ShouldProcess("Tag of release", 'return')) {
+                $tag
+            }
         }
     }elseif ($PR) {
         if ($PSCmdlet.ShouldProcess("PRs", 'return')) {
