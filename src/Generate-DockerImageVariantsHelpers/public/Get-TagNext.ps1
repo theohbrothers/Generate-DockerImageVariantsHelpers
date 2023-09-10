@@ -7,6 +7,7 @@ function Get-TagNext {
     )
 
     try {
+        $WhatIfPreference = $false
         $tagMostRecent = Execute-Command { git describe --tags --abbrev=0 } -ErrorAction Stop | Select-Object -Last 1
         if ($TagConvention) {
             if ($tagMostRecent) {
