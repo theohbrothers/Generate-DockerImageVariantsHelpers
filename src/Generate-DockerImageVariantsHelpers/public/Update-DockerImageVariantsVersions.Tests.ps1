@@ -71,8 +71,8 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
             Assert-MockCalled Automerge-DockerImageVariantsPR -Scope It -Times 0
         }
 
-        It 'Skips updating versions.json with -DryRun' {
-            Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -DryRun 6>$null
+        It 'Skips updating versions.json with -WhatIf' {
+            Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -WhatIf 6>$null
 
             Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
             Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 0
@@ -123,8 +123,8 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
             $autoMergeResults['FailCount'] | Should -Be 2
         }
 
-        It 'Does not perform -PR and -AutoMergeQueue if -DryRun is specified' {
-            $autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -DryRun 6>$null 2>$null 3>$null
+        It 'Does not perform -PR and -AutoMergeQueue if -WhatIf is specified' {
+            $autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -WhatIf 6>$null 2>$null 3>$null
 
             Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
             Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 0
