@@ -17,20 +17,16 @@ function New-Release {
             }
             $owner = ({ git remote get-url origin } | Execute-Command) -replace 'https://github.com/([^/]+)/([^/]+)', '$1'
             $project = ({ git remote get-url origin } | Execute-Command) -replace 'https://github.com/([^/]+)/([^/]+)', '$2' -replace '\.git$', ''
-            $defaultBranch = 'master'
-            $milestoneTitle = 'next-release'
+        }
+        $defaultBranch = 'master'
+
+        $tagNext = if ($TagConvention) {
+            Get-TagNext -TagConvention $TagConvention
+        }else {
+            Get-TagNext
         }
 
-        if ($PSCmdlet.ShouldProcess("next tag", 'get')) {
-            "Getting next tag" | Write-Host -ForegroundColor Green
-            $tagNext = if ($TagConvention) {
-                Get-TagNext -TagConvention $TagConvention
-            }else {
-                Get-TagNext
-            }
-        }
-
-        if ($PSCmdlet.ShouldProcess("tag", 'create')) {
+        if ($PSCmdlet.ShouldProcess("tag '$tagNext'", 'create')) {
             "Creating next tag on '$defaultBranch': $tagNext" | Write-Host -ForegroundColor Green
             { git checkout master } | Execute-Command
             { git tag $tagNext } | Execute-Command
@@ -47,7 +43,8 @@ function New-Release {
         #     $milestone = Set-GithubMilestone -OwnerName $owner -RepositoryName $project -
         # }
 
-        if ($PSCmdlet.ShouldProcess("milestone", 'close')) {
+        $milestoneTitle = 'next-release'
+        if ($PSCmdlet.ShouldProcess("milestone '$milestoneTitle'", "rename to '$tagNext' and close")) {
             "Getting milestone: $milestoneTitle" | Write-Host -ForegroundColor Green
             $milestones = Invoke-RestMethod -Method GET -Headers $headers -Uri "https://api.github.com/repos/$owner/$project/milestones" -Body @{
                 state = 'open'
@@ -56,6 +53,11 @@ function New-Release {
             if (!$milestone) {
                 "Not closing open milestone '$milestoneTitle' because it is not open or does not exist" | Write-Warning
             }else {
+                "Renaming milestone from '$( $milestone.title )' to '$tagNext'" | Write-Host -ForegroundColor Green
+                $milestone = Invoke-RestMethod -Method PATCH -Headers $headers -Uri "https://api.github.com/repos/$owner/$project/milestones/$( $milestone.number )" -Body (@{
+                    title = $tagNext
+                } | ConvertTo-Json -Depth 100)
+
                 "Closing milestone: $( $milestone.title )" | Write-Host -ForegroundColor Green
                 if ($PSCmdlet.ShouldProcess("milestone", 'close')) {
                     $milestoneClosed = Invoke-RestMethod -Method PATCH -Headers $headers -Uri "https://api.github.com/repos/$owner/$project/milestones/$( $milestone.number )" -Body (@{

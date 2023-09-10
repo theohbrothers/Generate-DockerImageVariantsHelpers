@@ -72,16 +72,26 @@ Describe "New-Release" -Tag 'Unit' {
 
     }
 
-    It "Creates new tag and closes milestone" {
+    It "Creates new tag, renames and closes milestone" {
         $tag = New-Release 6>$null
 
         Assert-MockCalled git -Scope It -Times 4
         Assert-MockCalled Get-TagNext -Scope It -Times 1
-        Assert-MockCalled Invoke-RestMethod -Scope It -Times 2
+        Assert-MockCalled Invoke-RestMethod -Scope It -Times 3
         $tag | Should -Be (Get-TagNext)
     }
 
-    It "Creates new tag, and skips closing milestone if it is already closed or does not exists" {
+    It "Creates new tag, renames and closes milestone (-WhatIf)" {
+        $tag = New-Release -WhatIf -ErrorVariable err 6>$null 3>$null
+
+        Assert-MockCalled git -Scope It -Times 0
+        Assert-MockCalled Get-TagNext -Scope It -Times 1
+        Assert-MockCalled Invoke-RestMethod -Scope It -Times 0
+        $tag | Should -Be $null
+        $err | Should -Be $null
+    }
+
+    It "Creates new tag, and skips renaming and closing milestone if it is already closed or does not exists" {
         function Get-MilestonesOpen {}
 
         $tag = New-Release 6>$null 3>$null
@@ -90,18 +100,6 @@ Describe "New-Release" -Tag 'Unit' {
         Assert-MockCalled Get-TagNext -Scope It -Times 1
         Assert-MockCalled Invoke-RestMethod -Scope It -Times 1
         $tag | Should -Be (Get-TagNext)
-    }
-
-    It "Creates new tag, and skips closing milestone if it is already closed or does not exists (-WhatIf)" {
-        function Get-MilestonesOpen {}
-
-        $tag = New-Release -WhatIf -ErrorVariable err 6>$null 3>$null
-
-        Assert-MockCalled git -Scope It -Times 0
-        Assert-MockCalled Get-TagNext -Scope It -Times 0
-        Assert-MockCalled Invoke-RestMethod -Scope It -Times 0
-        $tag | Should -Be $null
-        $err | Should -Be $null
     }
 
 }
