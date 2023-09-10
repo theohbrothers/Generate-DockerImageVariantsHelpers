@@ -29,6 +29,7 @@ function New-Release {
         if ($PSCmdlet.ShouldProcess("tag '$tagNext'", 'create')) {
             "Creating next tag on '$defaultBranch': $tagNext" | Write-Host -ForegroundColor Green
             { git checkout master } | Execute-Command
+            { git pull origin master } | Execute-Command
             { git tag $tagNext } | Execute-Command
             { git push origin $tagNext } | Execute-Command
         }
