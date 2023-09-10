@@ -19,14 +19,14 @@ function New-Release {
         $defaultBranch = 'master'
         $milestoneTitle = 'next-release'
 
-        "Getting next tag" | Write-Host
+        "Getting next tag" | Write-Host -ForegroundColor Green
         $tagNext = if ($TagConvention) {
             Get-TagNext -TagConvention $TagConvention
         }else {
             Get-TagNext
         }
 
-        "Creating next tag on '$defaultBranch': $tagNext" | Write-Host
+        "Creating next tag on '$defaultBranch': $tagNext" | Write-Host -ForegroundColor Green
         { git checkout master } | Execute-Command
         { git tag $tagNext } | Execute-Command
         { git push origin $tagNext } | Execute-Command
@@ -41,7 +41,7 @@ function New-Release {
         #     $milestone = Set-GithubMilestone -OwnerName $owner -RepositoryName $project -
         # }
 
-        "Getting milestone: $milestoneTitle" | Write-Host
+        "Getting milestone: $milestoneTitle" | Write-Host -ForegroundColor Green
         $milestones = Invoke-RestMethod -Method GET -Headers $headers -Uri "https://api.github.com/repos/$owner/$project/milestones" -Body @{
             state = 'open'
         }
@@ -49,7 +49,7 @@ function New-Release {
         if (!$milestone) {
             "Not closing open milestone '$milestoneTitle' because it is not open or does not exist" | Write-Warning
         }else {
-            "Closing milestone: $( $milestone.title )" | Write-Host
+            "Closing milestone: $( $milestone.title )" | Write-Host -ForegroundColor Green
             $milestoneClosed = Invoke-RestMethod -Method PATCH -Headers $headers -Uri "https://api.github.com/repos/$owner/$project/milestones/$( $milestone.number )" -Body (@{
                 state = 'closed'
             } | ConvertTo-Json -Depth 100)
