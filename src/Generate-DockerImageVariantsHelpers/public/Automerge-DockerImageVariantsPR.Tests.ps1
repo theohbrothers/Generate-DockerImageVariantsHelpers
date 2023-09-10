@@ -3,6 +3,7 @@ $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path) -replace '\.Tests\.', '.'
 . "$here\$sut"
 
 Describe "Automerge-DockerImageVariantsPR" -Tag 'Unit' {
+
     BeforeEach {
         $env:GITHUB_TOKEN = 'foo'
         $pr = [PSCustomObject]@{
@@ -42,7 +43,18 @@ Describe "Automerge-DockerImageVariantsPR" -Tag 'Unit' {
         Mock git {}
         function Execute-Command {}
         Mock Execute-Command {
-            & $Args[0]
+            [CmdletBinding(DefaultParameterSetName='Default')]
+            param (
+                [Parameter(Mandatory,ParameterSetName='Default',Position=0)]
+                [ValidateNotNull()]
+                [object]$Command
+            ,
+                [Parameter(ValueFromPipeline,ParameterSetName='Pipeline')]
+                [object]$InputObject
+            )
+
+            $Command = if ($InputObject) { $InputObject } else { $Command }
+            Invoke-Command $Command
         }
         Mock Invoke-RestMethod {
             param (
@@ -61,11 +73,7 @@ Describe "Automerge-DockerImageVariantsPR" -Tag 'Unit' {
                     sha = 'abcdef0'
                     merged = $true
                     message = 'Pull Request successfully merged'
-
                 }
-            }else {
-                $Uri | Write-Host
-                throw "Oops, invalid Uri"
             }
         }
         function Start-Sleep {}
@@ -109,19 +117,32 @@ Describe "Automerge-DockerImageVariantsPR" -Tag 'Unit' {
 
         $pr = Automerge-DockerImageVariantsPR -PR $pr 6>$null
 
-        $pr | Should -BeOfType [pscustomobject]
         Assert-MockCalled Invoke-RestMethod -Scope It -Times 5
         Assert-MockCalled Execute-Command -Scope It -Times 4
         Assert-MockCalled git -Scope It -Times 4
         Assert-MockCalled Start-Sleep -Scope It -Times 1
+        $pr | Should -BeOfType [pscustomobject]
     }
+
     It "Merges PRs" {
         $pr = Automerge-DockerImageVariantsPR -PR $pr 6>$null
 
-        $pr | Should -BeOfType [pscustomobject]
         Assert-MockCalled Invoke-RestMethod -Scope It -Times 5
         Assert-MockCalled git -Scope It -Times 0
         Assert-MockCalled Execute-Command -Scope It -Times 0
         Assert-MockCalled Start-Sleep -Scope It -Times 0
+        $pr | Should -BeOfType [pscustomobject]
     }
+
+    It "-WhatIf" {
+        $pr = Automerge-DockerImageVariantsPR -PR $pr -WhatIf -ErrorVariable err 6>$null
+
+        Assert-MockCalled Invoke-RestMethod -Scope It -Times 0
+        Assert-MockCalled git -Scope It -Times 0
+        Assert-MockCalled Execute-Command -Scope It -Times 0
+        Assert-MockCalled Start-Sleep -Scope It -Times 0
+        $pr | Should -Be $null
+        $err | Should -Be $null
+    }
+
 }

@@ -5,9 +5,9 @@ $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path) -replace '\.Tests\.', '.'
 Describe "New-Release" -Tag 'Unit' {
 
     BeforeEach {
-        $env:GITHUB_TOKEN
+        $env:GITHUB_TOKEN = 'foo'
         function Execute-Command {
-            [CmdletBinding(DefaultParameterSetName='Default')]
+            [CmdletBinding(DefaultParameterSetName='Default',SupportsShouldProcess)]
             param (
                 [Parameter(Mandatory,ParameterSetName='Default',Position=0)]
                 [ValidateNotNull()]
@@ -18,7 +18,8 @@ Describe "New-Release" -Tag 'Unit' {
             )
 
             $Command = if ($InputObject) { $InputObject } else { $Command }
-            Invoke-Command $Command}
+            Invoke-Command $Command
+        }
         function git {}
         Mock git {
             if ("$Args" -eq 'remote get-url origin') {
@@ -74,11 +75,10 @@ Describe "New-Release" -Tag 'Unit' {
     It "Creates new tag and closes milestone" {
         $tag = New-Release 6>$null
 
-        $tag | Should -Be (Get-TagNext)
-
         Assert-MockCalled git -Scope It -Times 4
         Assert-MockCalled Get-TagNext -Scope It -Times 1
         Assert-MockCalled Invoke-RestMethod -Scope It -Times 2
+        $tag | Should -Be (Get-TagNext)
     }
 
     It "Creates new tag, and skips closing milestone if it is already closed or does not exists" {
@@ -86,11 +86,22 @@ Describe "New-Release" -Tag 'Unit' {
 
         $tag = New-Release 6>$null 3>$null
 
-        $tag | Should -Be (Get-TagNext)
-
         Assert-MockCalled git -Scope It -Times 4
         Assert-MockCalled Get-TagNext -Scope It -Times 1
         Assert-MockCalled Invoke-RestMethod -Scope It -Times 1
+        $tag | Should -Be (Get-TagNext)
+    }
+
+    It "Creates new tag, and skips closing milestone if it is already closed or does not exists (-WhatIf)" {
+        function Get-MilestonesOpen {}
+
+        $tag = New-Release -WhatIf -ErrorVariable err 6>$null 3>$null
+
+        Assert-MockCalled git -Scope It -Times 0
+        Assert-MockCalled Get-TagNext -Scope It -Times 0
+        Assert-MockCalled Invoke-RestMethod -Scope It -Times 0
+        $tag | Should -Be $null
+        $err | Should -Be $null
     }
 
 }

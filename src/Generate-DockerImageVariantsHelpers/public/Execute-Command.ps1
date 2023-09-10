@@ -1,5 +1,5 @@
 function Execute-Command {
-    [CmdletBinding(DefaultParameterSetName='Default')]
+    [CmdletBinding(DefaultParameterSetName='Default',SupportsShouldProcess)]
     param (
         [Parameter(Mandatory,ParameterSetName='Default',Position=0)]
         [ValidateNotNull()]
@@ -21,10 +21,12 @@ function Execute-Command {
         }
         try {
             "Command: $scriptBlock" | Write-Verbose
-            Invoke-Command $scriptBlock
-            "LASTEXITCODE: $LASTEXITCODE" | Write-Verbose
-            if ($ErrorActionPreference -eq 'Stop' -and $LASTEXITCODE) {
-                throw "Command exit code was $LASTEXITCODE. Command: $scriptBlock"
+            if ($PSCmdlet.ShouldProcess("$scriptBlock")) {
+                Invoke-Command $scriptBlock
+            }
+            "LASTEXITCODE: $global:LASTEXITCODE" | Write-Verbose
+            if ($ErrorActionPreference -eq 'Stop' -and $global:LASTEXITCODE) {
+                throw "Command exit code was $global:LASTEXITCODE. Command: $scriptBlock"
             }
         }catch {
             if ($ErrorActionPreference -eq 'Stop') {

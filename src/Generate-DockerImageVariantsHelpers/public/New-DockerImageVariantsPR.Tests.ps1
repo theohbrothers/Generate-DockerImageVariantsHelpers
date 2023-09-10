@@ -59,6 +59,22 @@ Describe "New-DockerImageVariantsPR" -Tag 'Unit' {
             $pr | Should -BeOfType [PSCustomObject]
         }
 
+        It 'Creates new milestone and PR (-WhatIf)' {
+            Mock Get-GitHubMilestone {}
+            Mock New-GitHubMilestone { Get-FakeMilestone }
+            Mock Get-GitHubPullRequest {}
+            Mock New-GitHubPullRequest { Get-FakePR }
+
+            $pr = New-DockerImageVariantsPR -Version $version -Verb add -WhatIf -ErrorVariable err 6>$null
+
+            Assert-MockCalled Get-GitHubMilestone -Scope It -Times 0
+            Assert-MockCalled New-GitHubMilestone -Scope It -Times 0
+            Assert-MockCalled Get-GitHubPullRequest -Scope It -Times 0
+            Assert-MockCalled New-GitHubPullRequest -Scope It -Times 0
+            $pr | Should -Be $null
+            $err | Should -Be $null
+        }
+
         It 'Uses existing milestone and existing PR' {
             Mock Get-GitHubMilestone { Get-FakeMilestone }
             Mock New-GitHubMilestone {}

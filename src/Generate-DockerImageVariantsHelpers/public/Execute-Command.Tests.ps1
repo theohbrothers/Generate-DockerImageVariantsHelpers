@@ -6,15 +6,18 @@ Describe "Execute-Command" -Tag 'Unit' {
 
     Context 'Behavior' {
 
-        BeforeEach {
-            $global:LASTEXITCODE = 0
-        }
-        
         It 'Executes expressions' {
             Execute-Command -Command 123 | Should -Be 123
             Execute-Command -Command { 123 } | Should -Be 123
             123 | Execute-Command | Should -Be 123
             { 123 } | Execute-Command | Should -Be 123
+        }
+
+        It 'Executes expressions (-WhatIf)' {
+            $output = Execute-Command -Command 123 -WhatIf -ErrorVariable err
+
+            $output | Should -Be $null
+            $err | Should -Be $null
         }
 
         It 'Execute binaries' {

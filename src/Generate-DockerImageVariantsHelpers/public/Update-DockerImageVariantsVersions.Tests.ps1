@@ -5,14 +5,20 @@ $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path) -replace '\.Tests\.', '.'
 Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
 
     BeforeEach {
-
         function Get-DockerImageVariantsVersions {}
-        function Set-DockerImageVariantsVersions {}
-        function New-DockerImageVariantsPR {}
-        function Automerge-DockerImageVariantsPR {}
+        function Set-DockerImageVariantsVersions {
+            # param ($Versions, $WhatIf)
+        }
+        function New-DockerImageVariantsPR {
+            # param ($Version, $VersionNew, $Verb, $WhatIf)
+        }
+        function Automerge-DockerImageVariantsPR {
+            # param ($PR, $WhatIf)
+        }
     }
 
     Context 'Behavior' {
+
         BeforeEach {
             $versionsChanged = [ordered]@{
                 '0.1.1' = @{
@@ -45,7 +51,7 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
             $versionsChanged = [ordered]@{}
 
             {
-                Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged  6>$null
+                Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged 6>$null
             } | Should -Throw
 
             {
@@ -67,15 +73,6 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
 
             Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
             Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 2
-            Assert-MockCalled New-DockerImageVariantsPR -Scope It -Times 0
-            Assert-MockCalled Automerge-DockerImageVariantsPR -Scope It -Times 0
-        }
-
-        It 'Skips updating versions.json with -WhatIf' {
-            Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -WhatIf 6>$null
-
-            Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
-            Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 0
             Assert-MockCalled New-DockerImageVariantsPR -Scope It -Times 0
             Assert-MockCalled Automerge-DockerImageVariantsPR -Scope It -Times 0
         }
@@ -123,13 +120,19 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
             $autoMergeResults['FailCount'] | Should -Be 2
         }
 
-        It 'Does not perform -PR and -AutoMergeQueue if -WhatIf is specified' {
-            $autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -WhatIf 6>$null 2>$null 3>$null
+        It 'Automerges some PRs (success) (-WhatIf)' {
+            Mock Set-DockerImageVariantsVersions {} #-ParameterFilter { $Versions -and $WhatIf }
+            Mock New-DockerImageVariantsPR {} #-ParameterFilter { $Version -and $Verb -and $WhatIf }
+            Mock Automerge-DockerImageVariantsPR {} #-ParameterFilter { $PR -and $WhatIf }
+
+            $prs = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -WhatIf -ErrorVariable err 6>$null
 
             Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
-            Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 0
-            Assert-MockCalled New-DockerImageVariantsPR -Scope It -Times 0
-            Assert-MockCalled Automerge-DockerImageVariantsPR -Scope It -Times 0
+            Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 2 #-ParameterFilter { $Versions -and $WhatIf }
+            Assert-MockCalled New-DockerImageVariantsPR -Scope It -Times 2 #-ParameterFilter { $Version -and $Verb -and $WhatIf }
+            Assert-MockCalled Automerge-DockerImageVariantsPR -Scope It -Times 0 #-ParameterFilter { $PR -and $WhatIf }
+            $prs | Should -Be $null
+            $err | Should -Be $null
         }
 
     }

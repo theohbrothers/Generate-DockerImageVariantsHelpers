@@ -36,10 +36,10 @@ cd $repo
 Get-DockerImageVariantsVersions
 
 # Set generate/definitions/versions.json
-Set-DockerImageVariantsVersions -Versions @( '0.1.0', '0.2.0' )
+Set-DockerImageVariantsVersions -Versions @( '0.1.0', '0.2.0' ) #-WhatIf
 
 # Execute commands
-{ git status } | Execute-Command -ErrorAction Stop
+{ git status } | Execute-Command -ErrorAction Stop #-WhatIf
 
 # Get changed versions
 $versionsChanged = Get-VersionsChanged -Versions @( '0.1.0' ) -VersionsNew @( '0.1.1', '0.2.0' ) -AsObject
@@ -48,26 +48,26 @@ $versionsChanged = Get-VersionsChanged -Versions @( '0.1.0' ) -VersionsNew @( '0
 $prs = @(
     foreach ($c in $versionsChanged.Values) {
         if ($c['kind'] -eq 'new') {
-            New-DockerImageVariantsPR -Version $c['to'] -Verb add
+            New-DockerImageVariantsPR -Version $c['to'] -Verb add #-WhatIf
         }
         if ($c['kind'] -eq 'update') {
-            New-DockerImageVariantsPR -Version $c['from'] -VersionNew $c['to'] -Verb update
+            New-DockerImageVariantsPR -Version $c['from'] -VersionNew $c['to'] -Verb update #-WhatIf
         }
     }
 )
 # Merge each successful PR one after another
 foreach ($pr in $prs) {
-    $pr = Automerge-DockerImageVariantsPR -PR $pr
+    $pr = Automerge-DockerImageVariantsPR -PR $pr #-WhatIf
 }
 
 # Update generate/definitions/versions.json and open a PR for each changed version, and merge successful PRs one after another (to prevent merge conflicts)
-$autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue
+$autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue #-WhatIf
 
 # Get next tag
 $tag = Get-TagNext -TagConvention calver
 $tag = Get-TagNext -TagConvention semver
 
 # Tag, push new tag, and close milestone 'next-release'
-$tag = New-Release -TagConvention calver
-$tag = New-Release -TagConvention semver
+$tag = New-Release -TagConvention calver #-WhatIf
+$tag = New-Release -TagConvention semver #-WhatIf
 ```

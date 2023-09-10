@@ -29,6 +29,7 @@ Describe "Set-DockerImageVariantsVersions" {
             # Assert-MockCalled Set-Content -Scope It -Times 1
             Remove-Item "TestDrive:\generate" -Recurse -Force
         }
+
         It "Sets version.json" {
             Set-DockerImageVariantsVersions '0.1.0'
 
@@ -43,6 +44,12 @@ Describe "Set-DockerImageVariantsVersions" {
 "0.1.0"
 
 "@
+        }
+
+        It "Sets version.json (-WhatIf)" {
+            Set-DockerImageVariantsVersions '0.1.0' -WhatIf >$null
+
+            Test-Path $VERSIONS_JSON_FILE | Should -Be $false
         }
 
         It "Sets version.json with an empty array (first arg)" {
