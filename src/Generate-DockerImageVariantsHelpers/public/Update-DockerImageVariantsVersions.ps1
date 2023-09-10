@@ -20,6 +20,12 @@ function Update-DockerImageVariantsVersions {
         [Parameter(ParameterSetName='Pipeline')]
         [switch]$AutoRelease
     ,
+        [Parameter(HelpMessage="-AutoRelease tag convention")]
+        [Parameter(ParameterSetName='Default')]
+        [Parameter(ParameterSetName='Pipeline')]
+        [ValidateSet('calver', 'semver')]
+        [string]$AutoReleaseTagConvention
+    ,
         [Parameter(ValueFromPipeline,ParameterSetName='Pipeline')]
         [ValidateNotNullOrEmpty()]
         [System.Collections.Specialized.OrderedDictionary]$InputObject
@@ -104,7 +110,7 @@ function Update-DockerImageVariantsVersions {
                 }
                 if ($AutoRelease) {
                     if ($PSCmdlet.ShouldProcess("autorelease", 'create')) {
-                        $tag = New-Release
+                        $tag = New-Release -TagConvention:$AutoReleaseTagConvention
                     }
                     if ($PSCmdlet.ShouldProcess("Tag of release", 'return')) {
                         $tag
