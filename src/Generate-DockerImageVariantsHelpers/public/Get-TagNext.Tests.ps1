@@ -11,13 +11,13 @@ Describe "Get-TagNext" -Tag 'Unit' {
         function Get-TagMostRecent {}
         function Get-CommitTitles {}
         function git {
-            if ("$Args" -eq 'tag --sort=taggerdate') {
+            if ("$Args" -eq 'describe --tags --abbrev=0') {
                 Get-TagMostRecent
             }
             if ("$Args" -eq 'log master --format=%s') {
                 Get-CommitTitles
             }
-            if ("$Args" -eq "log master..$( Get-TagMostRecent ) --format=%s") {
+            if ("$Args" -eq "log $( Get-TagMostRecent )..master --format=%s") {
                 Get-CommitTitles
             }
         }
