@@ -1,20 +1,46 @@
 function Get-TagNext {
     [CmdletBinding()]
-    param ()
+    param (
+        [Parameter()]
+        [ValidateSet('calver', 'semver')]
+        [string]$TagConvention
+    )
 
     try {
-        $tagMostRecent = ( Execute-Command { git tag --sort=taggerdate } -ErrorAction Stop | Select-Object -Last 1 )
-        $tagsConvention = if ($tagMostRecent -match '^\d{8}\.\d+\.\d+$') {
-            'calver'
-        }elseif ($tagMostRecent -match '^v?\d+\.\d+\.\d+$') {
-            'semver'
-        }elseif (!$tagMostRecent) {
-            throw "No tags found in this repo"
+        $tagMostRecent = Execute-Command { git tag --sort=taggerdate } -ErrorAction Stop | Select-Object -Last 1
+        if ($TagConvention) {
+            if ($tagMostRecent) {
+                if ($TagConvention -eq 'calver' -and $tagMostRecent -notmatch '^\d{8}\.\d+\.\d+$') {
+                    throw "-TagConvention is calver but most recent tag is not calver"
+                }
+                if ($TagConvention -eq 'semver' -and ($tagMostRecent -notmatch '^v?\d+\.\d+\.\d+$' -or $tagMostRecent -match '^\d{8}\.\d+\.\d+$')) {
+                    throw "-TagConvention is semver but most recent tag is not semver"
+                }
+            }else {
+                "No tags found in this repo. Using specified -TagConvention" | Write-Verbose
+                $tagMostRecent = if ($TagConvention -eq 'calver') {
+                    "$( Get-Date -Format 'yyyyMMdd' ).0.0"
+                }elseif ($TagConvention -eq 'semver') {
+                    'v0.0.0'
+                }
+            }
         }else {
-            throw "Most recent tag is not in calver or semver format"
+            if ($tagMostRecent) {
+                "Tag convention will be determined based on previous tags: $TagConvention" | Write-Verbose
+                $TagConvention = if ($tagMostRecent -match '^\d{8}\.\d+\.\d+$') {
+                    'calver'
+                }elseif ($tagMostRecent -match '^v?\d+\.\d+\.\d+$') {
+                    'semver'
+                }else {
+                    throw "Most recent tag is not in calver or semver format"
+                }
+            }else {
+                throw "No tags found in this repo. Please specify a -TagConvention"
+            }
         }
+        "Tag convention: $TagConvention" | Write-Verbose
 
-        $BRANCH = $( Execute-Command { git rev-parse --abbrev-ref HEAD } -ErrorAction Stop )
+        $BRANCH = Execute-Command { git rev-parse --abbrev-ref HEAD } -ErrorAction Stop
         $commitTitles = $( Execute-Command { git log master..$BRANCH --format=%s } -ErrorAction Stop )
         if (!$commitTitles) {
             throw "No commits found between 'master' and '$BRANCH'"
@@ -28,10 +54,9 @@ function Get-TagNext {
                 $patch++
             }
         }
-        "Major commits / PR: $major, Minor commit / PR: $minor, Patch commits / PR: $patch" | Write-Verbose
-        if ($tagsConvention -eq 'calver') {
+        "Major commits or PRs: $major, Minor commits or PRs: $minor, Patch commits or PRs: $patch" | Write-Verbose
+        if ($TagConvention -eq 'calver') {
             # Calver. E.g. 20230910.0.0
-            "Based on the most recent tag, repo uses Calver format" | Write-Verbose
             $tagMostRecentV = [version]($tagMostRecent -replace '^v', '')
             if ("$( $tagMostRecentV.Major )" -eq (Get-Date -Format 'yyyyMMdd')) {
                 if ($major) {
@@ -48,9 +73,8 @@ function Get-TagNext {
                 "$( Get-Date -Format 'yyyyMMdd' ).0.0" # E.g. 20230910.0.0
             }
         }
-        if ($tagsConvention -eq 'semver') {
+        if ($TagConvention -eq 'semver') {
             # Semver. E.g. v0.0.1 or 0.0.1
-            "Based on the most recent tag, repo uses Semver format" | Write-Verbose
             $v = if ($tagMostRecent -match '^v') { 'v' } else { '' }
             $tagMostRecentV = [version]($tagMostRecent -replace '^v', '')
             if ($major) {
