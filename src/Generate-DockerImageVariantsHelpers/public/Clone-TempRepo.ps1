@@ -1,26 +1,25 @@
 function Clone-TempRepo {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     param ()
 
     process {
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
         try {
-            $gitRemote = git remote get-url origin
-            if ($LASTEXITCODE) { throw }
+            $gitRemote = { git remote get-url origin } | Execute-Command
 
             $tmpDir = if ($PSVersionTable.PSVersion.Major -le '5' -or $isWindows) {
-                "$env:TEMP/$( New-Guid )/$( Split-Path $gitRemote -Leaf )"
+                { "$env:TEMP/$( New-Guid )/$( Split-Path $gitRemote -Leaf )" } | Execute-Command
             }else {
-                "$( mktemp -d )/$( Split-Path $gitRemote -Leaf )"
+                { "$( mktemp -d )/$( Split-Path $gitRemote -Leaf )" } | Execute-Command
             }
-            if ($LASTEXITCODE) { throw }
 
-            git clone "$gitRemote" "$tmpDir" | Write-Host
-            if ($LASTEXITCODE) { throw }
+            { git clone "$gitRemote" "$tmpDir" } | Execute-Command | Write-Host
 
             # Return the temp repo path
-            $tmpDir
+            if ($PSCmdlet.ShouldProcess($tmpDir, 'return')) {
+                $tmpDir
+            }
         }catch {
             if ($callerEA -eq 'Stop') {
                 throw

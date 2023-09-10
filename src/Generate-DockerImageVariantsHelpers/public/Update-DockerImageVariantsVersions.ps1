@@ -1,5 +1,5 @@
 function Update-DockerImageVariantsVersions {
-    [CmdletBinding(DefaultParameterSetName='Default')]
+    [CmdletBinding(DefaultParameterSetName='Default',SupportsShouldProcess)]
     param (
         [Parameter(Mandatory,ParameterSetName='Default',Position=0)]
         [ValidateNotNullOrEmpty()]
@@ -14,11 +14,6 @@ function Update-DockerImageVariantsVersions {
         [Parameter(ParameterSetName='Default')]
         [Parameter(ParameterSetName='Pipeline')]
         [switch]$AutoMergeQueue
-    ,
-        [Parameter(HelpMessage="Whether to perform a dry run")]
-        [Parameter(ParameterSetName='Default')]
-        [Parameter(ParameterSetName='Pipeline')]
-        [switch]$WhatIf
     ,
         [Parameter(ValueFromPipeline,ParameterSetName='Pipeline')]
         [ValidateNotNullOrEmpty()]
@@ -37,11 +32,9 @@ function Update-DockerImageVariantsVersions {
                 $vc['to']
                 Get-DockerImageVariantsVersions
             )
-            if (!$WhatIf) {
-                Set-DockerImageVariantsVersions -Versions $versions
-                if ($PR) {
-                    $prs += New-DockerImageVariantsPR -Version $vc['to'] -Verb add
-                }
+            Set-DockerImageVariantsVersions -Versions $versions
+            if ($PR) {
+                $prs += New-DockerImageVariantsPR -Version $vc['to'] -Verb add
             }
         }elseif ($vc['kind'] -eq 'update') {
             $versions = [System.Collections.ArrayList]@()
@@ -53,46 +46,50 @@ function Update-DockerImageVariantsVersions {
                     $versions.Add($v) > $null
                 }
             }
-            if (!$WhatIf) {
-                Set-DockerImageVariantsVersions -Versions $versions
-                if ($PR) {
-                    $prs += New-DockerImageVariantsPR -Version $vc['from'] -VersionNew $vc['to'] -Verb update
-                }
+            Set-DockerImageVariantsVersions -Versions $versions
+            if ($PR) {
+                $prs += New-DockerImageVariantsPR -Version $vc['from'] -VersionNew $vc['to'] -Verb update
             }
         }
     }
 
-    if (!$WhatIf -and $PR -and $AutoMergeQueue) {
-        "Will automerge all PRs" | Write-Host -ForegroundColor Green
-        $autoMergeResults = [ordered]@{
-            AllPRs = @()
-            FailPRNumbers = @()
-            FailCount = 0
-        }
-        for ($i = 0; $i -lt $prs.Count; $i++) {
-            $_pr = $prs[$i]
-            try {
-                "Will automerge PR #$( $_pr.number )" | Write-Host -ForegroundColor Green
-                $autoMergeResults['AllPRs'] += Automerge-DockerImageVariantsPR -PR $_pr
-                "Automerge succeeded for PR #$( $_pr.number )" | Write-Host -ForegroundColor Green
-            }catch {
-                "Automerge failed for PR #$( $_pr.number )" | Write-Warning
-                $autoMergeResults['AllPRs'] += $_pr
-                $autoMergeResults['FailPRNumbers'] += $prs[$i].number
-                $autoMergeResults['FailCount']++
+    if ($PR -and $AutoMergeQueue) {
+        if ($PSCmdlet.ShouldProcess("PRs", 'automerge')) {
+            "Will automerge all PRs" | Write-Host -ForegroundColor Green
+            $autoMergeResults = [ordered]@{
+                AllPRs = @()
+                FailPRNumbers = @()
+                FailCount = 0
+            }
+            for ($i = 0; $i -lt $prs.Count; $i++) {
+                $_pr = $prs[$i]
+                try {
+                    "Will automerge PR #$( $_pr.number )" | Write-Host -ForegroundColor Green
+                    $autoMergeResults['AllPRs'] += Automerge-DockerImageVariantsPR -PR $_pr
+                    "Automerge succeeded for PR #$( $_pr.number )" | Write-Host -ForegroundColor Green
+                }catch {
+                    "Automerge failed for PR #$( $_pr.number )" | Write-Warning
+                    $autoMergeResults['AllPRs'] += $_pr
+                    $autoMergeResults['FailPRNumbers'] += $prs[$i].number
+                    $autoMergeResults['FailCount']++
+                }
+            }
+            if ($autoMergeResults['FailCount']) {
+                $msg = "$( $autoMergeResults['FailCount'] ) PRs failed to merge. PRs: $( ($autoMergeResults['PRs'] | % { "#$_" }) -join ', ' )"
+                if ($ErrorActionPreference -eq 'Stop') {
+                    throw $msg
+                }
+                if ($ErrorActionPreference -eq 'Continue') {
+                    $msg | Write-Error
+                }
             }
         }
-        if ($autoMergeResults['FailCount']) {
-            $msg = "$( $autoMergeResults['FailCount'] ) PRs failed to merge. PRs: $( ($autoMergeResults['PRs'] | % { "#$_" }) -join ', ' )"
-            if ($ErrorActionPreference -eq 'Stop') {
-                throw $msg
-            }
-            if ($ErrorActionPreference -eq 'Continue') {
-                $msg | Write-Error
-            }
+        if ($PSCmdlet.ShouldProcess("Result of merged PRs", 'return')) {
+            $autoMergeResults   # Return the results
         }
-        $autoMergeResults   # Return the results
-    }else {
-        ,$prs
+    }elseif ($PR) {
+        if ($PSCmdlet.ShouldProcess("PRs", 'return')) {
+            ,$prs   # Return the PRs
+        }
     }
 }
