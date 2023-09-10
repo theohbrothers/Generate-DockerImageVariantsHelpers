@@ -66,4 +66,7 @@ $autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $version
 # Get next tag
 $tag = Get-TagNext -TagConvention calver
 $tag = Get-TagNext -TagConvention semver
+
+# Tag, push new tag, and close milestone 'next-release'
+$tag = New-Release
 ```
