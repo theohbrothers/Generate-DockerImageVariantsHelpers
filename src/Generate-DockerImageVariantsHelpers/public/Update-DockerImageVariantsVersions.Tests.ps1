@@ -75,6 +75,29 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
             $err | Should -Not -Be $null
         }
 
+        It 'Does nothing when there are no changed versions' {
+            $versionsChanged = [ordered]@{
+                '0.1.0' = @{
+                    from = '0.1.0'
+                    to = '0.1.0'
+                    kind = 'existing'
+                }
+                '1.2.0' = @{
+                    from = '1.2.0'
+                    to = '1.2.0'
+                    kind = 'existing'
+                }
+            }
+
+            Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged 6>$null
+
+            Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 0
+            Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 0
+            Assert-MockCalled New-DockerImageVariantsPR -Scope It -Times 0
+            Assert-MockCalled Automerge-DockerImageVariantsPR -Scope It -Times 0
+            Assert-MockCalled New-Release -Scope It -Times 0
+        }
+
         It 'Errors (terminating)' {
             Mock Get-DockerImageVariantsVersions {
                 throw "some exception"

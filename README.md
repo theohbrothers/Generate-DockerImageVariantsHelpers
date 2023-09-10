@@ -62,6 +62,8 @@ foreach ($pr in $prs) {
 
 # Update generate/definitions/versions.json and open a PR for each changed version, and merge successful PRs one after another (to prevent merge conflicts)
 $autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue #-WhatIf
+# Update generate/definitions/versions.json and open a PR for each changed version, and merge successful PRs one after another (to prevent merge conflicts), and finally create a tagged release and closing milestone
+$autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -AutoRelease #-WhatIf
 
 # Get next tag
 $tag = Get-TagNext -TagConvention calver
