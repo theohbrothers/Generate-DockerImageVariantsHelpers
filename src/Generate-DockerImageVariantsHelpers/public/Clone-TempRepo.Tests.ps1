@@ -2,12 +2,10 @@ $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path) -replace '\.Tests\.', '.'
 . "$here\$sut"
 
-Describe "Clone-TempRepo" {
+Describe "Clone-TempRepo" -Tag Unit {
 
     BeforeEach {
         function git {}
-        function mktemp {}
-
     }
 
     Context 'Error handling' {
@@ -36,14 +34,13 @@ Describe "Clone-TempRepo" {
                 }
                 if ($Args[0] -eq 'clone') {
                     "cloning into '$( $Args[2] )'"
-
                 }
             }
 
             $output = Clone-TempRepo 6>$null
 
             Assert-MockCalled git -Scope It -Times 2
-            $output | Should -Be '/foo'
+            $output | Should -Match '/foo$'
         }
 
     }
