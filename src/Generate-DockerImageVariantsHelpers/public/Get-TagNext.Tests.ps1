@@ -20,7 +20,10 @@ Describe "Get-TagNext" {
             if ("$Args" -eq 'rev-parse --abbrev-ref HEAD') {
                 Get-Branch
             }
-            if ("$Args" -eq 'log master..mybranch --format=%s') {
+            if ("$Args" -eq 'log master --format=%s') {
+                Get-CommitTitles
+            }
+            if ("$Args" -eq "log master..$( Get-TagMostRecent ) --format=%s") {
                 Get-CommitTitles
             }
         }
@@ -214,7 +217,7 @@ Describe "Get-TagNext" {
 
             $tag = Get-TagNext -TagConvention calver
 
-            $tag | Should -Be "$( Get-Date -Format 'yyyyMMdd' ).1.0" # today
+            $tag | Should -Be "$( Get-Date -Format 'yyyyMMdd' ).0.0" # today
         }
 
         It "Gets next tag in calver, when no tags exist in repo (minor)" {
@@ -225,7 +228,7 @@ Describe "Get-TagNext" {
 
             $tag = Get-TagNext -TagConvention calver
 
-            $tag | Should -Be "$( Get-Date -Format 'yyyyMMdd' ).1.0" # today
+            $tag | Should -Be "$( Get-Date -Format 'yyyyMMdd' ).0.0" # today
         }
 
         It "Gets next tag in calver, when no tags exist in repo (patch)" {
@@ -236,7 +239,7 @@ Describe "Get-TagNext" {
 
             $tag = Get-TagNext -TagConvention calver
 
-            $tag | Should -Be "$( Get-Date -Format 'yyyyMMdd' ).0.1" # today
+            $tag | Should -Be "$( Get-Date -Format 'yyyyMMdd' ).0.0" # today
         }
 
         It "Gets next tag in semver, when no tags exist in repo (major)" {
@@ -262,7 +265,8 @@ Describe "Get-TagNext" {
         }
 
         It "Gets next tag in semver, when no tags exist in repo (patch)" {
-            function Get-TagMostRecent {}
+            function Get-TagMostRecent {
+            }
             function Get-CommitTitles {
                 'Fix: Fix foo'
             }

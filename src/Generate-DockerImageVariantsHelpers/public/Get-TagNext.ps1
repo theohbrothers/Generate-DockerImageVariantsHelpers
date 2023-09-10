@@ -18,11 +18,6 @@ function Get-TagNext {
                 }
             }else {
                 "No tags found in this repo. Using specified -TagConvention" | Write-Verbose
-                $tagMostRecent = if ($TagConvention -eq 'calver') {
-                    "$( Get-Date -Format 'yyyyMMdd' ).0.0"
-                }elseif ($TagConvention -eq 'semver') {
-                    'v0.0.0'
-                }
             }
         }else {
             if ($tagMostRecent) {
@@ -40,11 +35,17 @@ function Get-TagNext {
         }
         "Tag convention: $TagConvention" | Write-Verbose
 
-        $BRANCH = Execute-Command { git rev-parse --abbrev-ref HEAD } -ErrorAction Stop
-        $commitTitles = $( Execute-Command { git log master..$BRANCH --format=%s } -ErrorAction Stop )
-        if (!$commitTitles) {
-            throw "No commits found between 'master' and '$BRANCH'"
+        $commitTitles = if (!$tagMostRecent ) {
+            Execute-Command { git log master --format=%s } -ErrorAction Stop
+        }else {
+            Execute-Command { git log master..$tagMostRecent --format=%s } -ErrorAction Stop
         }
+        if (!$commitTitles) {
+            throw "No commits found between 'master' and '$tagMostRecent'"
+        }
+        $major = 0
+        $minor = 0
+        $patch = 0
         foreach ($t in $commitTitles) {
             if ($t -match '^(breaking)') {
                 $major++
@@ -57,17 +58,21 @@ function Get-TagNext {
         "Major commits or PRs: $major, Minor commits or PRs: $minor, Patch commits or PRs: $patch" | Write-Verbose
         if ($TagConvention -eq 'calver') {
             # Calver. E.g. 20230910.0.0
-            $tagMostRecentV = [version]($tagMostRecent -replace '^v', '')
-            if ("$( $tagMostRecentV.Major )" -eq (Get-Date -Format 'yyyyMMdd')) {
-                if ($major) {
-                    "$( Get-Date -Format 'yyyyMMdd' ).$( $tagMostRecentV.Minor + 1).0" # E.g. 20230910.0.0 -> 20230910.1.0
-                }elseif ($minor) {
-                    "$( Get-Date -Format 'yyyyMMdd' ).$( $tagMostRecentV.Minor + 1).0" # E.g. 20230910.0.0 -> 20230910.1.0
-                }elseif ($patch) {
-                    "$( Get-Date -Format 'yyyyMMdd' ).$( $tagMostRecentV.Minor ).$( $tagMostRecentV.Build + 1 )" # E.g. 20230910.0.0 -> 20230910.0.1
+            if ($tagMostRecent) {
+                $tagMostRecentV = [version]($tagMostRecent -replace '^v', '')
+                if ("$( $tagMostRecentV.Major )" -eq (Get-Date -Format 'yyyyMMdd')) {
+                    if ($major) {
+                        "$( Get-Date -Format 'yyyyMMdd' ).$( $tagMostRecentV.Minor + 1).0" # E.g. 20230910.0.0 -> 20230910.1.0
+                    }elseif ($minor) {
+                        "$( Get-Date -Format 'yyyyMMdd' ).$( $tagMostRecentV.Minor + 1).0" # E.g. 20230910.0.0 -> 20230910.1.0
+                    }elseif ($patch) {
+                        "$( Get-Date -Format 'yyyyMMdd' ).$( $tagMostRecentV.Minor ).$( $tagMostRecentV.Build + 1 )" # E.g. 20230910.0.0 -> 20230910.0.1
+                    }else {
+                        # Should not arrive here
+                         throw "Couldn't determine Calver tag, because the commit messages do not follow Conventional Commits."
+                    }
                 }else {
-                    # Should not arrive here
-                    throw "Couldn't determine Calver tag"
+                    "$( Get-Date -Format 'yyyyMMdd' ).0.0" # E.g. 20230910.0.0
                 }
             }else {
                 "$( Get-Date -Format 'yyyyMMdd' ).0.0" # E.g. 20230910.0.0
@@ -75,17 +80,31 @@ function Get-TagNext {
         }
         if ($TagConvention -eq 'semver') {
             # Semver. E.g. v0.0.1 or 0.0.1
-            $v = if ($tagMostRecent -match '^v') { 'v' } else { '' }
-            $tagMostRecentV = [version]($tagMostRecent -replace '^v', '')
-            if ($major) {
-                "$v$( $tagMostRecentV.Major + 1).0.0" # E.g. v0.0.1 -> v1.0.0
-            }elseif ($minor) {
-                "$v$( $tagMostRecentV.Major).$( $tagMostRecentV.Minor + 1).0" # E.g. v0.0.1 -> v0.1.0
-            }elseif ($patch) {
-                "$v$( $tagMostRecentV.Major).$( $tagMostRecentV.Minor ).$( $tagMostRecentV.Build + 1 )" # E.g. v0.0.1 -> v0.0.2
+            if ($tagMostRecent) {
+                $v = if ($tagMostRecent -match '^v') { 'v' } else { '' }
+                $tagMostRecentV = [version]($tagMostRecent -replace '^v', '')
+                if ($major) {
+                    "$v$( $tagMostRecentV.Major + 1).0.0" # E.g. v0.0.1 -> v1.0.0
+                }elseif ($minor) {
+                    "$v$( $tagMostRecentV.Major).$( $tagMostRecentV.Minor + 1).0" # E.g. v0.0.1 -> v0.1.0
+                }elseif ($patch) {
+                    "$v$( $tagMostRecentV.Major).$( $tagMostRecentV.Minor ).$( $tagMostRecentV.Build + 1 )" # E.g. v0.0.1 -> v0.0.2
+                }else {
+                    # Should not arrive here
+                    throw "Couldn't determine Semver tag, because the commit messages do not follow Conventional Commits."
+                }
             }else {
-                # Should not arrive here
-                throw "Couldn't determine Semver tag"
+                $v = 'v'
+                if ($major) {
+                    "$( $v )1.0.0"
+                }elseif ($minor) {
+                    "$( $v )0.1.0"
+                }elseif ($patch) {
+                    "$( $v )0.0.1"
+                }else {
+                    # Should not arrive here
+                    throw "Couldn't determine Semver tag"
+                }
             }
         }
     }catch {
