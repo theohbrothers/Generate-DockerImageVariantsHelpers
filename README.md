@@ -45,6 +45,7 @@ Set-DockerImageVariantsVersions -Versions @( '0.1.0', '0.2.0' ) #-WhatIf
 $versionsChanged = Get-VersionsChanged -Versions @( '0.1.0' ) -VersionsNew @( '0.1.1', '0.2.0' ) -AsObject
 
 # Open PR for each changed version
+$env:GITHUB_TOKEN = 'xxx'
 $prs = @(
     foreach ($c in $versionsChanged.Values) {
         if ($c['kind'] -eq 'new') {
@@ -56,20 +57,24 @@ $prs = @(
     }
 )
 # Merge each successful PR one after another
+$env:GITHUB_TOKEN = 'xxx'
 foreach ($pr in $prs) {
     $pr = Automerge-DockerImageVariantsPR -PR $pr #-WhatIf
 }
 
 # Update generate/definitions/versions.json and open a PR for each changed version, and merge successful PRs one after another (to prevent merge conflicts)
+$env:GITHUB_TOKEN = 'xxx'
 $autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue #-WhatIf
 # Update generate/definitions/versions.json and open a PR for each changed version, and merge successful PRs one after another (to prevent merge conflicts), and finally create a tagged release and closing milestone
-$autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -AutoRelease #-WhatIf
+$autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -AutoRelease -AutoReleaseTagConvention calver #-WhatIf
+$autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -AutoRelease -AutoReleaseTagConvention semver #-WhatIf
 
 # Get next tag
 $tag = Get-TagNext -TagConvention calver
 $tag = Get-TagNext -TagConvention semver
 
 # Tag, push new tag, and close milestone 'next-release'
+$env:GITHUB_TOKEN = 'xxx'
 $tag = New-Release -TagConvention calver #-WhatIf
 $tag = New-Release -TagConvention semver #-WhatIf
 ```

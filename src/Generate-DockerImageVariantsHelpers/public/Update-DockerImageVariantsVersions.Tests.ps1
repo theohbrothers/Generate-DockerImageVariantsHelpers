@@ -170,7 +170,7 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
         }
 
         It 'Automerges some PRs and autoreleases' {
-            $returns = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -AutoRelease 6>$null
+            $returns = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -AutoRelease -AutoReleaseTagConvention 'semver' 6>$null
 
             Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
             Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 2
@@ -187,7 +187,7 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
             Mock Automerge-DockerImageVariantsPR {} #-ParameterFilter { $PR -and $WhatIf }
             Mock New-Release {} #-ParameterFilter { $PR -and $WhatIf }
 
-            $prs = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -AutoRelease -WhatIf -ErrorVariable err 6>$null
+            $prs = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -AutoRelease -AutoReleaseTagConvention 'semver' -WhatIf -ErrorVariable err 6>$null
 
             Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
             Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 2 #-ParameterFilter { $Versions -and $WhatIf }
