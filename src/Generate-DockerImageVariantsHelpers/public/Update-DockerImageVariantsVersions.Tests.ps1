@@ -182,19 +182,19 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
         }
 
         It 'Automerges some PRs and autoreleases (-WhatIf)' {
-            Mock Set-DockerImageVariantsVersions {} #-ParameterFilter { $Versions -and $WhatIf }
-            Mock New-DockerImageVariantsPR {} #-ParameterFilter { $Version -and $Verb -and $WhatIf }
-            Mock Automerge-DockerImageVariantsPR {} #-ParameterFilter { $PR -and $WhatIf }
-            Mock New-Release {} #-ParameterFilter { $PR -and $WhatIf }
+            # Mock Set-DockerImageVariantsVersions {} #-ParameterFilter { $Versions -and $WhatIf }
+            # Mock New-DockerImageVariantsPR {} #-ParameterFilter { $Version -and $Verb -and $WhatIf }
+            # Mock Automerge-DockerImageVariantsPR {} #-ParameterFilter { $PR -and $WhatIf }
+            # Mock New-Release {} #-ParameterFilter { $PR -and $WhatIf }
 
-            $prs = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -AutoRelease -AutoReleaseTagConvention 'semver' -WhatIf -ErrorVariable err 6>$null
+            $returns = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -AutoRelease -AutoReleaseTagConvention 'semver' -WhatIf -ErrorVariable err 6>$null
 
             Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
             Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 2 #-ParameterFilter { $Versions -and $WhatIf }
             Assert-MockCalled New-DockerImageVariantsPR -Scope It -Times 2 #-ParameterFilter { $Version -and $Verb -and $WhatIf }
-            Assert-MockCalled Automerge-DockerImageVariantsPR -Scope It -Times 0 #-ParameterFilter { $PR -and $WhatIf }
-            Assert-MockCalled New-Release -Scope It -Times 0 #-ParameterFilter { $WhatIf }
-            $prs | Should -Be $null
+            Assert-MockCalled Automerge-DockerImageVariantsPR -Scope It -Times 2 #-ParameterFilter { $PR -and $WhatIf }
+            Assert-MockCalled New-Release -Scope It -Times 1 #-ParameterFilter { $WhatIf }
+            $returns | Should -Be $null
             $err | Should -Be $null
         }
 

@@ -75,43 +75,40 @@ function Update-DockerImageVariantsVersions {
             }
 
             if ($PR -and $AutoMergeQueue) {
-                if ($PSCmdlet.ShouldProcess("PRs", 'automerge')) {
-                    "Will automerge all PRs" | Write-Host -ForegroundColor Green
-                    $autoMergeResults = [ordered]@{
-                        AllPRs = @()
-                        FailPRNumbers = @()
-                        FailCount = 0
+                "Will automerge all PRs" | Write-Host -ForegroundColor Green
+                $autoMergeResults = [ordered]@{
+                    AllPRs = @()
+                    FailPRNumbers = @()
+                    FailCount = 0
+                }
+                for ($i = 0; $i -lt $prs.Count; $i++) {
+                    $_pr = $prs[$i]
+                    try {
+                        "Will automerge PR #$( $_pr.number )" | Write-Host -ForegroundColor Green
+                        $autoMergeResults['AllPRs'] += Automerge-DockerImageVariantsPR -PR $_pr
+                        "Automerge succeeded for PR #$( $_pr.number )" | Write-Host -ForegroundColor Green
+                    }catch {
+                        "Automerge failed for PR #$( $_pr.number )" | Write-Warning
+                        $autoMergeResults['AllPRs'] += $_pr
+                        $autoMergeResults['FailPRNumbers'] += $prs[$i].number
+                        $autoMergeResults['FailCount']++
                     }
-                    for ($i = 0; $i -lt $prs.Count; $i++) {
-                        $_pr = $prs[$i]
-                        try {
-                            "Will automerge PR #$( $_pr.number )" | Write-Host -ForegroundColor Green
-                            $autoMergeResults['AllPRs'] += Automerge-DockerImageVariantsPR -PR $_pr
-                            "Automerge succeeded for PR #$( $_pr.number )" | Write-Host -ForegroundColor Green
-                        }catch {
-                            "Automerge failed for PR #$( $_pr.number )" | Write-Warning
-                            $autoMergeResults['AllPRs'] += $_pr
-                            $autoMergeResults['FailPRNumbers'] += $prs[$i].number
-                            $autoMergeResults['FailCount']++
-                        }
+                }
+                if ($autoMergeResults['FailCount']) {
+                    $msg = "$( $autoMergeResults['FailCount'] ) PRs failed to merge. PRs: $( ($autoMergeResults['PRs'] | % { "#$_" }) -join ', ' )"
+                    if ($ErrorActionPreference -eq 'Stop') {
+                        throw $msg
                     }
-                    if ($autoMergeResults['FailCount']) {
-                        $msg = "$( $autoMergeResults['FailCount'] ) PRs failed to merge. PRs: $( ($autoMergeResults['PRs'] | % { "#$_" }) -join ', ' )"
-                        if ($ErrorActionPreference -eq 'Stop') {
-                            throw $msg
-                        }
-                        if ($ErrorActionPreference -eq 'Continue') {
-                            $msg | Write-Error
-                        }
+                    if ($ErrorActionPreference -eq 'Continue') {
+                        $msg | Write-Error
                     }
                 }
                 if ($PSCmdlet.ShouldProcess("Result of merged PRs", 'return')) {
                     $autoMergeResults   # Return the results
                 }
                 if ($AutoRelease) {
-                    if ($PSCmdlet.ShouldProcess("autorelease", 'create')) {
-                        $tag = New-Release -TagConvention:$AutoReleaseTagConvention
-                    }
+                    "Will create a tagged release" | Write-Host -ForegroundColor Green
+                    $tag = New-Release -TagConvention:$AutoReleaseTagConvention -WhatIf:$WhatIfPreference
                     if ($PSCmdlet.ShouldProcess("Tag of release", 'return')) {
                         $tag
                     }
