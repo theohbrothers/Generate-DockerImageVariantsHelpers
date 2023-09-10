@@ -64,5 +64,6 @@ foreach ($pr in $prs) {
 $autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue
 
 # Get next tag
-$tag = Get-TagNext
+$tag = Get-TagNext -TagConvention calver
+$tag = Get-TagNext -TagConvention semver
 ```
