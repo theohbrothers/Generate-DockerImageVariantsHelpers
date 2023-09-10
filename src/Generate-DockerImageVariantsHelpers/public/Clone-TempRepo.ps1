@@ -24,7 +24,7 @@ function Clone-TempRepo {
             if ($callerEA -eq 'Stop') {
                 throw
             }elseif ($callerEA -eq 'Continue') {
-                $_ | Write-Error
+                $_ | Write-Error -ErrorAction Continue
             }
         }
     }

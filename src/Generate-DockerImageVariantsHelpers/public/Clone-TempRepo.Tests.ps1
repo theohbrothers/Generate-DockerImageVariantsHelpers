@@ -32,11 +32,19 @@ Describe "Clone-TempRepo" -Tag Unit {
 
     Context 'Error handling' {
 
-        It "Honors -ErrorAction Stop" {
+        It 'Errors (non-terminating)' {
             Mock Execute-Command {
-                if ($ErrorActionPreference -eq 'Stop') {
-                    throw "some exception"
-                }
+                throw "some exception"
+            }
+
+            Clone-TempRepo -ErrorVariable err 2>$null 6>$null
+
+            $err | Should -Not -Be $null
+        }
+
+        It 'Errors (terminating)' {
+            Mock Execute-Command {
+                throw "some exception"
             }
 
             {
