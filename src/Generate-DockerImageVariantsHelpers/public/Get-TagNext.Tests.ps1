@@ -9,16 +9,10 @@ Describe "Get-TagNext" {
             & $Args[0]
         }
         function Get-TagMostRecent {}
-        function Get-Branch {
-            'mybranch'
-        }
         function Get-CommitTitles {}
         function git {
             if ("$Args" -eq 'tag --sort=taggerdate') {
                 Get-TagMostRecent
-            }
-            if ("$Args" -eq 'rev-parse --abbrev-ref HEAD') {
-                Get-Branch
             }
             if ("$Args" -eq 'log master --format=%s') {
                 Get-CommitTitles
@@ -63,7 +57,7 @@ Describe "Get-TagNext" {
 
         {
             Get-TagNext -ErrorAction Stop
-        } | Should -Throw "No commits found between 'master' and '$( Get-Branch )'"
+        } | Should -Throw "No commits found between 'master' and '$( Get-TagMostRecent )'"
     }
 
     It "Gets next tag in calver according to previous commit titles (major)" {
