@@ -72,7 +72,7 @@ RequiredModules = @(@{ModuleName = 'Generate-DockerImageVariants'; RequiredVersi
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 FunctionsToExport = 'Automerge-DockerImageVariantsPR', 'Clone-TempRepo', 
                'Execute-Command', 'Get-DockerImageVariantsVersions', 'Get-TagNext', 
-               'Get-VersionsChanged', 'New-DockerImageVariantsPR', 
+               'Get-VersionsChanged', 'New-DockerImageVariantsPR', 'New-Release', 
                'Set-DockerImageVariantsVersions', 
                'Update-DockerImageVariantsVersions'
 
