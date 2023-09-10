@@ -7,7 +7,7 @@ function Get-TagNext {
     )
 
     try {
-        $tagMostRecent = Execute-Command { git tag --sort=taggerdate } -ErrorAction Stop | Select-Object -Last 1
+        $tagMostRecent = Execute-Command { git describe --tags --abbrev=0 } -ErrorAction Stop | Select-Object -Last 1
         if ($TagConvention) {
             if ($tagMostRecent) {
                 if ($TagConvention -eq 'calver' -and $tagMostRecent -notmatch '^\d{8}\.\d+\.\d+$') {
@@ -38,7 +38,7 @@ function Get-TagNext {
         $commitTitles = if (!$tagMostRecent ) {
             Execute-Command { git log master --format=%s } -ErrorAction Stop
         }else {
-            Execute-Command { git log master..$tagMostRecent --format=%s } -ErrorAction Stop
+            Execute-Command { git log "$tagMostRecent..master" --format=%s } -ErrorAction Stop
         }
         if (!$commitTitles) {
             throw "No commits found between 'master' and '$tagMostRecent'"
