@@ -46,54 +46,65 @@ function Update-DockerImageVariantsVersions {
             }
 
             $prs = @()
+            $autoMergeResults = [ordered]@{
+                AllPRs = @()
+                FailPRNumbers = @()
+                FailCount = 0
+            }
+            $_pr = $null
             foreach ($vc in $VersionsChanged.Values) {
-                if ($vc['kind'] -eq 'new') {
-                    "New: $( $vc['to'] )" | Write-Host -ForegroundColor Green
-                    $versions = @(
-                        $vc['to']
-                        Get-DockerImageVariantsVersions
-                    )
-                    Set-DockerImageVariantsVersions -Versions $versions
-                    if ($PR) {
-                        $prs += New-DockerImageVariantsPR -Version $vc['to'] -Verb add
-                    }
-                }elseif ($vc['kind'] -eq 'update') {
-                    $versions = [System.Collections.ArrayList]@()
-                    foreach ($v in (Get-DockerImageVariantsVersions)) {
-                        if ($v -eq $vc['from']) {
-                            "Update: $( $vc['from'] ) to $( $vc['to'] )" | Write-Host -ForegroundColor Green
-                            $versions.Add($vc['to']) > $null
-                        }else {
-                            $versions.Add($v) > $null
+                # Update versions.json and open PR
+                if ($vc['kind'] -eq 'new' -or $vc['kind'] -eq 'update') {
+                    if ($vc['kind'] -eq 'new') {
+                        "New: $( $vc['to'] )" | Write-Host -ForegroundColor Green
+                        $versions = @(
+                            $vc['to']
+                            Get-DockerImageVariantsVersions
+                        )
+                        Set-DockerImageVariantsVersions -Versions $versions
+                        if ($PR) {
+                            $prs += $_pr = New-DockerImageVariantsPR -Version $vc['to'] -Verb add
+                        }
+                    }elseif ($vc['kind'] -eq 'update') {
+                        $versions = [System.Collections.ArrayList]@()
+                        foreach ($v in (Get-DockerImageVariantsVersions)) {
+                            if ($v -eq $vc['from']) {
+                                "Update: $( $vc['from'] ) to $( $vc['to'] )" | Write-Host -ForegroundColor Green
+                                $versions.Add($vc['to']) > $null
+                            }else {
+                                $versions.Add($v) > $null
+                            }
+                        }
+                        Set-DockerImageVariantsVersions -Versions $versions
+                        if ($PR) {
+                            $prs += $_pr = New-DockerImageVariantsPR -Version $vc['from'] -VersionNew $vc['to'] -Verb update
                         }
                     }
-                    Set-DockerImageVariantsVersions -Versions $versions
-                    if ($PR) {
-                        $prs += New-DockerImageVariantsPR -Version $vc['from'] -VersionNew $vc['to'] -Verb update
+
+                    # Merge PR
+                    if ($PR -and $AutoMergeQueue) {
+                        if ($WhatIfPreference) {
+                            $_pr = [pscustomobject]@{
+                                number = 1
+                            }
+                        }
+                        try {
+                            "Will automerge PR #$( $_pr.number )" | Write-Host -ForegroundColor Green
+                            $autoMergeResults['AllPRs'] += Automerge-DockerImageVariantsPR -PR $_pr
+                            "Automerge succeeded for PR #$( $_pr.number )" | Write-Host -ForegroundColor Green
+                        }catch {
+                            "Automerge failed for PR #$( $_pr.number )" | Write-Warning
+                            $_ | Write-Error -ErrorAction Continue
+                            $autoMergeResults['AllPRs'] += $_pr
+                            $autoMergeResults['FailPRNumbers'] += $_pr.number
+                            $autoMergeResults['FailCount']++
+                        }
                     }
                 }
             }
 
             if ($PR -and $AutoMergeQueue) {
-                "Will automerge all PRs" | Write-Host -ForegroundColor Green
-                $autoMergeResults = [ordered]@{
-                    AllPRs = @()
-                    FailPRNumbers = @()
-                    FailCount = 0
-                }
-                for ($i = 0; $i -lt $prs.Count; $i++) {
-                    $_pr = $prs[$i]
-                    try {
-                        "Will automerge PR #$( $_pr.number )" | Write-Host -ForegroundColor Green
-                        $autoMergeResults['AllPRs'] += Automerge-DockerImageVariantsPR -PR $_pr
-                        "Automerge succeeded for PR #$( $_pr.number )" | Write-Host -ForegroundColor Green
-                    }catch {
-                        "Automerge failed for PR #$( $_pr.number )" | Write-Warning
-                        $autoMergeResults['AllPRs'] += $_pr
-                        $autoMergeResults['FailPRNumbers'] += $prs[$i].number
-                        $autoMergeResults['FailCount']++
-                    }
-                }
+                # Error if any PR failed to merge
                 if ($autoMergeResults['FailCount']) {
                     $msg = "$( $autoMergeResults['FailCount'] ) PRs failed to merge. PRs: $( ($autoMergeResults['PRs'] | % { "#$_" }) -join ', ' )"
                     if ($ErrorActionPreference -eq 'Stop') {
@@ -106,16 +117,18 @@ function Update-DockerImageVariantsVersions {
                 if ($PSCmdlet.ShouldProcess("Result of merged PRs", 'return')) {
                     $autoMergeResults   # Return the results
                 }
-                if ($AutoRelease) {
-                    "Will create a tagged release" | Write-Host -ForegroundColor Green
-                    $tag = New-Release -TagConvention:$AutoReleaseTagConvention -WhatIf:$WhatIfPreference
-                    if ($PSCmdlet.ShouldProcess("Tag of release", 'return')) {
-                        $tag
-                    }
-                }
             }elseif ($PR) {
                 if ($PSCmdlet.ShouldProcess("PRs", 'return')) {
                     ,$prs   # Return the PRs
+                }
+            }
+
+            # Autorelease if all PRs merged
+            if ($AutoRelease) {
+                "Will create a tagged release" | Write-Host -ForegroundColor Green
+                $tag = New-Release -TagConvention:$AutoReleaseTagConvention -WhatIf:$WhatIfPreference
+                if ($PSCmdlet.ShouldProcess("Tag of release", 'return')) {
+                    $tag
                 }
             }
         }catch {
