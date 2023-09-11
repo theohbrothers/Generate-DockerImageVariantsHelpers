@@ -51,6 +51,10 @@ Enhancement: Bump v$( $Version.Major ).$( $Version.Minor ) variants to v$( $Vers
 Signed-off-by: $( { git config --global user.name } | Execute-Command ) <$( { git config --global user.email } | Execute-Command )>
 "@
                 }
+                $existingBranch = { git rev-parse --verify $BRANCH } | Execute-Command -ErrorAction Continue
+                if ($existingBranch) {
+                    { git branch -D $BRANCH } | Execute-Command | Write-Host
+                }
                 { git checkout -b $BRANCH } | Execute-Command | Write-Host
                 { git add . } | Execute-Command | Write-Host
                 { git commit -m "$COMMIT_MSG" } | Execute-Command | Write-Host
@@ -58,7 +62,6 @@ Signed-off-by: $( { git config --global user.name } | Execute-Command ) <$( { gi
             }
 
             if ($PSCmdlet.ShouldProcess("PR", 'create')) {
-                "Creating PR" | Write-Host -Foreground Green
                 $env:GITHUB_TOKEN = if ($env:GITHUB_TOKEN) { $env:GITHUB_TOKEN } else { (Get-Content ~/.git-credentials -Encoding utf8 -Force) -split "`n" | % { if ($_ -match '^https://[^:]+:([^:]+)@github.com') { $matches[1] } } | Select-Object -First 1 }
                 $owner = ({ git remote get-url origin } | Execute-Command) -replace 'https://github.com/([^/]+)/([^/]+)', '$1'
                 $project = ({ git remote get-url origin } | Execute-Command) -replace 'https://github.com/([^/]+)/([^/]+)', '$2' -replace '\.git$', ''
@@ -72,7 +75,10 @@ Signed-off-by: $( { git config --global user.name } | Execute-Command ) <$( { gi
                 #     gh milestone create --title $MILESTONE
                 # }
                 $pr = Get-GitHubPullRequest -OwnerName $owner -RepositoryName $project -AccessToken $env:GITHUB_TOKEN -State open | ? { $_.base.ref -eq 'master'  -and $_.head.ref -eq $BRANCH }
-                if (!$pr) {
+                if ($pr) {
+                    "Using existing PR" | Write-Host -Foreground Green
+                }else {
+                    "Creating PR" | Write-Host -Foreground Green
                     $pr = New-GitHubPullRequest -OwnerName $owner -RepositoryName $project -AccessToken $env:GITHUB_TOKEN -Base master -Head $BRANCH -Title "$( { git log --format=%s -1 } | Execute-Command )" -Body "$( { git log --format=%b -1 } | Execute-Command )"
                 }
             }

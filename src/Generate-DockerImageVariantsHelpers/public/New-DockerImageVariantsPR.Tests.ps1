@@ -8,8 +8,26 @@ Describe "New-DockerImageVariantsPR" -Tag 'Unit' {
     Get-Module PowerShellForGitHub -ErrorAction SilentlyContinue | Remove-Module -Force
 
     BeforeEach {
+        function git {}
+        Mock git {
+            if ("$Args" -eq 'rev-parse --verify') {
+                'abc0123'
+            }
+        }
+        function Execute-Command {
+            [CmdletBinding(DefaultParameterSetName='Default')]
+            param (
+                [Parameter(Mandatory,ParameterSetName='Default',Position=0)]
+                [ValidateNotNull()]
+                [object]$Command
+            ,
+                [Parameter(ValueFromPipeline,ParameterSetName='Pipeline')]
+                [object]$InputObject
+            )
 
-        function Execute-Command {}
+            $Command = if ($InputObject) { $InputObject } else { $Command }
+            Invoke-Command $Command
+        }
         function Generate-DockerImageVariants {}
         function Set-GitHubConfiguration {}
         function Get-GitHubMilestone {}
