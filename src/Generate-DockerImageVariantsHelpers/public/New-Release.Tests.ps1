@@ -59,7 +59,7 @@ Describe "New-Release" -Tag 'Unit' {
             }elseif ($Method -eq 'PATCH' -and $Uri -eq 'https://api.github.com/repos/namespace/project/milestones/122') {
                 [pscustomobject]@{
                     number = 122
-                    title = 'v0.1.0-clash'
+                    title = 'v0.1.0-renamed'
                     state = 'closed'
                 }
             }elseif ($Method -eq 'PATCH' -and $Uri -eq 'https://api.github.com/repos/namespace/project/milestones/123') {

@@ -62,7 +62,7 @@ function Automerge-DockerImageVariantsPR {
             throw
         }
         if ($ErrorActionPreference -eq 'Continue') {
-            $msg | Write-Error
+            $msg | Write-Error -ErrorAction Continue
         }
     }
 }

@@ -113,7 +113,7 @@ function Get-TagNext {
             throw
         }
         if ($ErrorActionPreference -eq 'Continue') {
-            $_ | Write-Error
+            $_ | Write-Error -ErrorAction Continue
         }
     }
 }
