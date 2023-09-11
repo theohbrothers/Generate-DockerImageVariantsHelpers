@@ -26,7 +26,7 @@ function New-Release {
             Get-TagNext
         }
 
-        if ($PSCmdlet.ShouldProcess("tag '$tagNext'", 'create')) {
+        if ($PSCmdlet.ShouldProcess("<tag>", 'create')) {
             "Creating next tag on '$defaultBranch': $tagNext" | Write-Host -ForegroundColor Green
             { git checkout master } | Execute-Command
             { git pull origin master } | Execute-Command
@@ -45,7 +45,7 @@ function New-Release {
         # }
 
         $milestoneTitle = 'next-release'
-        if ($PSCmdlet.ShouldProcess("milestone '$milestoneTitle'", "rename to '$tagNext' and close")) {
+        if ($PSCmdlet.ShouldProcess("milestone '$milestoneTitle'", "rename milestone to '<tag>' and close")) {
             "Getting milestone: $milestoneTitle" | Write-Host -ForegroundColor Green
             $milestones = Invoke-RestMethod -Method GET -Headers $headers -Uri "https://api.github.com/repos/$owner/$project/milestones" -Body @{
                 state = 'all'
