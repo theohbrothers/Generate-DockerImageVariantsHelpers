@@ -34,7 +34,8 @@ function Automerge-DockerImageVariantsPR {
                     $checkSuiteMostRecent = $checkSuites.check_suites | Sort-Object -Property created_at -Descending | Select-Object -First 1
                     "PR latest check suite status: $( $checkSuiteMostRecent.status )" | Write-Host
                     "PR latest check suite conclusion: $( $checkSuiteMostRecent.conclusion )" | Write-Host
-                    if (!$pr.mergeable) {
+                    if ($pr.mergeable -eq $false) {
+                        # NOTE: $pr.mergeable may occasionally be empty when the PR is just created or forced push. Only error when value is 'false'
                         throw "Skip merging PR because it is not mergeable"
                     }
                     if ($pr.mergeable -and $checkSuiteMostRecent.status -eq 'completed' -and $checkSuiteMostRecent.conclusion -eq 'success') { # Successful PR HEAD pipeline
