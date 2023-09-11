@@ -137,7 +137,7 @@ function Update-DockerImageVariantsVersions {
             if ($AutoRelease) {
                 "Will create a tagged release" | Write-Host -ForegroundColor Green
                 $tag = New-Release -TagConvention:$AutoReleaseTagConvention -WhatIf:$WhatIfPreference
-                if ($PSCmdlet.ShouldProcess("Tag of release", 'return')) {
+                if ($PSCmdlet.ShouldProcess("tag", 'return')) {
                     $tag
                 }
             }
