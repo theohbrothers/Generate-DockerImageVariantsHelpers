@@ -5,6 +5,21 @@ $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path) -replace '\.Tests\.', '.'
 Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
 
     BeforeEach {
+        function Execute-Command {
+            [CmdletBinding(DefaultParameterSetName='Default')]
+            param (
+                [Parameter(Mandatory,ParameterSetName='Default',Position=0)]
+                [ValidateNotNull()]
+                [object]$Command
+            ,
+                [Parameter(ValueFromPipeline,ParameterSetName='Pipeline')]
+                [object]$InputObject
+            )
+
+            $Command = if ($InputObject) { $InputObject } else { $Command }
+            Invoke-Command $Command
+        }
+        function git {}
         function Get-DockerImageVariantsVersions {}
         function Set-DockerImageVariantsVersions {
             # param ($Versions, $WhatIf)
