@@ -60,6 +60,12 @@ function Update-DockerImageVariantsVersions {
             foreach ($vc in $VersionsChanged.Values) {
                 # Update versions.json and open PR
                 if ($vc['kind'] -eq 'new' -or $vc['kind'] -eq 'update') {
+
+                    if ($PR) {
+                        { git checkout master } | Execute-Command | Write-Host
+                        { git pull origin master } | Execute-Command | Write-Host
+                    }
+
                     if ($vc['kind'] -eq 'new') {
                         "New: $( $vc['to'] )" | Write-Host -ForegroundColor Green
                         $versions = @(
