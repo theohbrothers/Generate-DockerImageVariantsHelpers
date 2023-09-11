@@ -65,7 +65,7 @@ foreach ($pr in $prs) {
 # Update generate/definitions/versions.json and open a PR for each changed version, and merge successful PRs one after another (to prevent merge conflicts)
 $env:GITHUB_TOKEN = 'xxx'
 $autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue #-WhatIf
-# Update generate/definitions/versions.json and open a PR for each changed version, and merge successful PRs one after another (to prevent merge conflicts), and finally create a tagged release and closing milestone
+# Update generate/definitions/versions.json and open a PR for each changed version, and merge successful PRs one after another (to prevent merge conflicts), and create a tagged release and close milestone
 $autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -AutoRelease -AutoReleaseTagConvention calver #-WhatIf
 $autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -AutoRelease -AutoReleaseTagConvention semver #-WhatIf
 
@@ -73,7 +73,7 @@ $autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $version
 $tag = Get-TagNext -TagConvention calver
 $tag = Get-TagNext -TagConvention semver
 
-# Tag, push new tag, and close milestone 'next-release'
+# Tag <tag>, push new <tag>, rename milestone 'next-release' to <tag>, and close milestone
 $env:GITHUB_TOKEN = 'xxx'
 $tag = New-Release -TagConvention calver #-WhatIf
 $tag = New-Release -TagConvention semver #-WhatIf
