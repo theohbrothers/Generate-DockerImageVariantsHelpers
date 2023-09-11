@@ -30,12 +30,17 @@ Describe "New-Release" -Tag 'Unit' {
         Mock Get-TagNext {
             'v0.1.0'
         }
-        function Get-MilestonesOpen {
+        function Get-Milestones {
             ,@(
                 [pscustomobject]@{
                     number = 123
                     title = 'next-release'
                     state = 'open'
+                },
+                [pscustomobject]@{
+                    number = 122
+                    title = 'v0.1.0'
+                    state = 'closed'
                 }
             )
         }
@@ -50,11 +55,17 @@ Describe "New-Release" -Tag 'Unit' {
                     name = 'v0.1.0'
                 }
             }elseif ($Uri -eq 'https://api.github.com/repos/namespace/project/milestones') {
-                ,(Get-MilestonesOpen)
+                ,(Get-Milestones)
+            }elseif ($Method -eq 'PATCH' -and $Uri -eq 'https://api.github.com/repos/namespace/project/milestones/122') {
+                [pscustomobject]@{
+                    number = 122
+                    title = 'v0.1.0-clash'
+                    state = 'closed'
+                }
             }elseif ($Method -eq 'PATCH' -and $Uri -eq 'https://api.github.com/repos/namespace/project/milestones/123') {
                 [pscustomobject]@{
                     number = 123
-                    title = 'next-release'
+                    title = Get-TagNext
                     state = 'closed'
                 }
             }
@@ -72,12 +83,12 @@ Describe "New-Release" -Tag 'Unit' {
 
     }
 
-    It "Creates new tag, renames and closes milestone" {
-        $tag = New-Release 6>$null
+    It "Creates new tag, renames clashed milestone if it exists, renames and closes milestone" {
+        $tag = New-Release 6>$null 3>$null
 
         Assert-MockCalled git -Scope It -Times 4
         Assert-MockCalled Get-TagNext -Scope It -Times 1
-        Assert-MockCalled Invoke-RestMethod -Scope It -Times 3
+        Assert-MockCalled Invoke-RestMethod -Scope It -Times 4
         $tag | Should -Be (Get-TagNext)
     }
 
@@ -90,9 +101,8 @@ Describe "New-Release" -Tag 'Unit' {
         $tag | Should -Be $null
         $err | Should -Be $null
     }
-
     It "Creates new tag, and skips renaming and closing milestone if it is already closed or does not exists" {
-        function Get-MilestonesOpen {}
+        function Get-Milestones {}
 
         $tag = New-Release 6>$null 3>$null
 
