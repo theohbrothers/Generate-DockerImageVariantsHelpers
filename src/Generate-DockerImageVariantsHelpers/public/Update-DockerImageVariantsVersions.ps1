@@ -60,14 +60,13 @@ function Update-DockerImageVariantsVersions {
             foreach ($vc in $VersionsChanged.Values) {
                 # Update versions.json and open PR
                 if ($vc['kind'] -eq 'new' -or $vc['kind'] -eq 'update') {
-
                     if ($PR) {
                         { git checkout master } | Execute-Command | Write-Host
                         { git pull origin master } | Execute-Command | Write-Host
                     }
 
                     if ($vc['kind'] -eq 'new') {
-                        "New: $( $vc['to'] )" | Write-Host -ForegroundColor Green
+                        "> New: $( $vc['to'] )" | Write-Host -ForegroundColor Green
                         $versions = @(
                             $vc['to']
                             Get-DockerImageVariantsVersions
@@ -80,7 +79,7 @@ function Update-DockerImageVariantsVersions {
                         $versions = [System.Collections.ArrayList]@()
                         foreach ($v in (Get-DockerImageVariantsVersions)) {
                             if ($v -eq $vc['from']) {
-                                "Update: $( $vc['from'] ) to $( $vc['to'] )" | Write-Host -ForegroundColor Green
+                                "> Update: $( $vc['from'] ) to $( $vc['to'] )" | Write-Host -ForegroundColor Green
                                 $versions.Add($vc['to']) > $null
                             }else {
                                 $versions.Add($v) > $null
