@@ -26,7 +26,7 @@ function New-DockerImageVariantsPR {
                 }
             }
 
-            if ($PSCmdlet.ShouldProcess("PR branch", 'create')) {
+            # if ($PSCmdlet.ShouldProcess("PR branch", 'create')) {
                 "Creating PR branch" | Write-Host -Foreground Green
                 { git config --global --add safe.directory $PWD } | Execute-Command | Write-Host
                 if (!({ git config --global user.name } | Execute-Command -ErrorAction SilentlyContinue)) {
@@ -66,7 +66,7 @@ Signed-off-by: $( { git config --global user.name } | Execute-Command ) <$( { gi
                 { git add . } | Execute-Command | Write-Host
                 { git commit -m "$COMMIT_MSG" } | Execute-Command | Write-Host
                 { git push origin $BRANCH -f } | Execute-Command | Write-Host
-            }
+            # }
 
             if ($PSCmdlet.ShouldProcess("PR", 'create')) {
                 $env:GITHUB_TOKEN = if ($env:GITHUB_TOKEN) { $env:GITHUB_TOKEN } else { (Get-Content ~/.git-credentials -Encoding utf8 -Force) -split "`n" | % { if ($_ -match '^https://[^:]+:([^:]+)@github.com') { $matches[1] } } | Select-Object -First 1 }
