@@ -140,7 +140,7 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
             $prs.Count | Should -Be 2
         }
 
-        It 'Automerges some PRs (success)' {
+        It 'Automerges PRs (success)' {
             $autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue 6>$null
 
             Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
@@ -155,21 +155,23 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
             $autoMergeResults['FailCount'] | Should -Be 0
         }
 
-        It 'Automerges some PRs (fail)' {
+        It 'Automerges PRs (fail)' {
             Mock Automerge-DockerImageVariantsPR {
                 throw
             }
 
-            $autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -ErrorVariable err  6>$null 2>$null 3>$null
+            $autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -ErrorVariable err -ErrorAction Continue 6>$null 2>$null 3>$null
 
             Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
             Assert-MockCalled Set-DockerImageVariantsVersions -Scope It -Times 2
             Assert-MockCalled New-DockerImageVariantsPR -Scope It -Times 2
             Assert-MockCalled Automerge-DockerImageVariantsPR -Scope It -Times 2
             Assert-MockCalled New-Release -Scope It -Times 0
+            $autoMergeResults | Should -Be $null
+            $err | Should -Not -Be $null
         }
 
-        It 'Automerges some PRs and autoreleases' {
+        It 'Automerges PRs and autoreleases' {
             $returns = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -AutoRelease -AutoReleaseTagConvention 'semver' 6>$null
 
             Assert-MockCalled Get-DockerImageVariantsVersions -Scope It -Times 2
@@ -181,7 +183,7 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
             $returns[1] | Should -Be (New-Release)
         }
 
-        It 'Automerges some PRs and autoreleases (-WhatIf)' {
+        It 'Automerges PRs and autoreleases (-WhatIf)' {
             # Mock Set-DockerImageVariantsVersions {} #-ParameterFilter { $Versions -and $WhatIf }
             # Mock New-DockerImageVariantsPR {} #-ParameterFilter { $Version -and $Verb -and $WhatIf }
             # Mock Automerge-DockerImageVariantsPR {} #-ParameterFilter { $PR -and $WhatIf }
