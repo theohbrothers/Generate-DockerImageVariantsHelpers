@@ -11,6 +11,9 @@ function New-DockerImageVariantsPR {
         [Parameter(Mandatory,Position=2)]
         [ValidateSet('add', 'update')]
         [string]$Verb
+    ,
+        [Parameter(HelpMessage='Scriptblock to run before git add and git commit')]
+        [scriptblock]$CommitPreScriptblock
     )
 
     process {
@@ -32,7 +35,11 @@ function New-DockerImageVariantsPR {
                 if (!({ git config --global user.email }| Execute-Command -ErrorAction SilentlyContinue)) {
                     { git config --global user.email "bot@theohbrothers.com" } | Execute-Command | Write-Host
                 }
-                { Generate-DockerImageVariants . } | Execute-Command | Write-Host
+                if ($CommitPreScriptblock) {
+                    $CommitPreScriptblock | Execute-Command | Write-Host
+                }else {
+                    { Generate-DockerImageVariants . } | Execute-Command | Write-Host
+                }
                 $BRANCH = if ($Verb -eq 'add') {
                     "enhancement/add-v$( $Version.Major ).$( $Version.Minor ).$( $Version.Build )-variants"
                 }elseif ($Verb -eq 'update') {
