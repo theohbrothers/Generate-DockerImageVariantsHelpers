@@ -14,6 +14,8 @@ Describe "Clone-TempRepo" -Tag Unit {
                 "cloning into '$( $Args[2] )'"
             }
         }
+        function Copy-Item {}
+        Mock Copy-Item {}
         function Execute-Command {
             [CmdletBinding(DefaultParameterSetName='Default')]
             param (
@@ -59,14 +61,14 @@ Describe "Clone-TempRepo" -Tag Unit {
         It "Clones repo" {
             $output = Clone-TempRepo 6>$null
 
-            Assert-MockCalled git -Scope It -Times 2
+            Assert-MockCalled Copy-Item -Scope It -Times 1
             $output | Should -Match '/foo$'
         }
 
         It "Clones repo (-WhatIf)" {
             $output = Clone-TempRepo -WhatIf -ErrorVariable err 6>$null
 
-            Assert-MockCalled git -Scope It -Times 2
+            Assert-MockCalled Copy-Item -Scope It -Times 1
             $output | Should -Be $null
             $err | Should -Be $null
         }

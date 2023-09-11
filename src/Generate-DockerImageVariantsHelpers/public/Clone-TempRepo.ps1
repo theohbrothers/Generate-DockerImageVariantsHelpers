@@ -14,7 +14,9 @@ function Clone-TempRepo {
                 { "$( mktemp -d )/$( Split-Path $gitRemote -Leaf )" } | Execute-Command
             }
 
-            { git clone "$gitRemote" "$tmpDir" } | Execute-Command | Write-Host
+            # { git clone "$gitRemote" "$tmpDir" } | Execute-Command | Write-Host
+            $sourceDir = { git rev-parse --show-toplevel } | Execute-Command
+            Copy-Item $sourceDir $tmpDir -Recurse -Force
 
             # Return the temp repo path
             if ($PSCmdlet.ShouldProcess($tmpDir, 'return')) {
