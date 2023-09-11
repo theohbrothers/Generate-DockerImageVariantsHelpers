@@ -5,6 +5,11 @@ function Update-DockerImageVariantsVersions {
         [ValidateNotNullOrEmpty()]
         [System.Collections.Specialized.OrderedDictionary]$VersionsChanged
     ,
+        [Parameter(HelpMessage='Scriptblock to run before git add and git commit on a PR branch')]
+        [Parameter(ParameterSetName='Default')]
+        [Parameter(ParameterSetName='Pipeline')]
+        [scriptblock]$CommitPreScriptblock
+    ,
         [Parameter(HelpMessage="Whether to open a PR for each updated version in version.json")]
         [Parameter(ParameterSetName='Default')]
         [Parameter(ParameterSetName='Pipeline')]
@@ -63,7 +68,7 @@ function Update-DockerImageVariantsVersions {
                         )
                         Set-DockerImageVariantsVersions -Versions $versions
                         if ($PR) {
-                            $prs += $_pr = New-DockerImageVariantsPR -Version $vc['to'] -Verb add
+                            $prs += $_pr = New-DockerImageVariantsPR -Version $vc['to'] -Verb add -CommitPreScriptblock $CommitPreScriptblock
                         }
                     }elseif ($vc['kind'] -eq 'update') {
                         $versions = [System.Collections.ArrayList]@()
@@ -77,7 +82,7 @@ function Update-DockerImageVariantsVersions {
                         }
                         Set-DockerImageVariantsVersions -Versions $versions
                         if ($PR) {
-                            $prs += $_pr = New-DockerImageVariantsPR -Version $vc['from'] -VersionNew $vc['to'] -Verb update
+                            $prs += $_pr = New-DockerImageVariantsPR -Version $vc['from'] -VersionNew $vc['to'] -Verb update -CommitPreScriptblock $CommitPreScriptblock
                         }
                     }
 
