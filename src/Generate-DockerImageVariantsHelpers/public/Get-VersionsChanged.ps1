@@ -10,6 +10,10 @@ function Get-VersionsChanged {
         [string[]]$VersionsNew
     ,
         [Parameter()]
+        [ValidateSet('minor', 'patch')]
+        [string]$ChangeScope = 'minor'
+    ,
+        [Parameter()]
         [switch]$AsObject
     ,
         [Parameter()]
@@ -37,8 +41,10 @@ function Get-VersionsChanged {
         $vnPrev = $null
         foreach ($vn in $VersionsNew) {
             $vn = [version]$vn
-            if ($vnPrev -and $vnPrev.Major -eq $vn.Major -and $vnPrev.Minor -eq $vn.Minor) {
-                continue
+            if ($ChangeScope -eq 'minor') {
+                if ($vnPrev -and $vnPrev.Major -eq $vn.Major -and $vnPrev.Minor -eq $vn.Minor) {
+                    continue
+                }
             }
             foreach ($v in $Versions) {
                 $v = [version]$v
@@ -67,10 +73,24 @@ function Get-VersionsChanged {
                 if ($vn.Major -eq $v.Major -and $vn.Minor -eq $v.Minor -and $vn.Build -gt $v.Build) {
                     if (!$versionsChanged.Contains("$vn")) {
                         "Found new patch version: $v to $vn" | Write-Verbose
-                        $versionsChanged["$vn"] = [ordered]@{
-                            from = "$v"
-                            to = "$vn"
-                            kind = 'update'
+                        if ($ChangeScope -eq 'patch') {
+                            $versionsChanged["$vn"] = [ordered]@{
+                                from = "$vn"
+                                to = "$vn"
+                                kind = 'new'
+                            }
+                            $versionsChanged["$v"] = [ordered]@{
+                                from = "$v"
+                                to = "$v"
+                                kind = 'existing'
+                            }
+                        }
+                        if ($ChangeScope -eq 'minor') {
+                            $versionsChanged["$vn"] = [ordered]@{
+                                from = "$v"
+                                to = "$vn"
+                                kind = 'update'
+                            }
                         }
                         break
                     }
