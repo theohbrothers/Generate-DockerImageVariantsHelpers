@@ -15,7 +15,16 @@ Describe "Get-VersionsChanged" -Tag 'Unit' {
 
     Context 'Behavior' {
 
-        It "Gets new versions" {
+        It "Gets original versions when none changed" {
+            $versions = @( '0.1.0', '1.0.0' )
+            $versionsNew = @( '0.1.0', '1.0.0' )
+
+            $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $versionsNew
+
+            $versionsChanged | Should -Be $versions
+        }
+
+        It "Gets new version" {
             $versions = @()
             $versionsNew = @( '1.0.0' )
 
@@ -24,16 +33,7 @@ Describe "Get-VersionsChanged" -Tag 'Unit' {
             $versionsChanged | Should -Be $versionsNew
         }
 
-        It "Gets original versions when none changed" {
-            $versions = @( '1.0.0' )
-            $versionsNew = @( '1.0.0' )
-
-            $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $versionsNew
-
-            $versionsChanged | Should -Be $versions
-        }
-
-        It "Gets new versions" {
+        It "Gets new versions (-ChangeScope minor)" {
             $versions = @(
                 '0.1.0'
                 '1.0.0'
@@ -52,6 +52,7 @@ Describe "Get-VersionsChanged" -Tag 'Unit' {
                 '1.2.0'
                 '2.0.0'
             )
+
             $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $VersionsNew
 
             $versionsChanged | Should -Be $expectedVersionsChanged
@@ -78,7 +79,70 @@ Describe "Get-VersionsChanged" -Tag 'Unit' {
                     kind = 'new'
                 }
             }
+
             $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $VersionsNew -AsObject
+
+            @( $versionsChanged.Keys ) | Should -Be @( $expectedVersionsChanged.Keys )
+            $versionsChanged.Keys | % {
+                $versionsChanged[$_]['from'] | Should -Be $expectedVersionsChanged[$_]['from']
+                $versionsChanged[$_]['to'] | Should -Be $expectedVersionsChanged[$_]['to']
+                $versionsChanged[$_]['kind'] | Should -Be $expectedVersionsChanged[$_]['kind']
+            }
+        }
+
+        It "Gets versions (-ChangeScope patch)" {
+            $versions = @(
+                '0.1.0'
+                '1.0.0'
+            )
+            $VersionsNew = @(
+                '0.1.0'
+                '0.1.1'
+                '1.0.0'
+                '1.0.1'
+                '1.2.0'
+                '2.0.0'
+            )
+            $expectedVersionsChanged = $VersionsNew
+
+            $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $versionsNew -ChangeScope patch
+
+            $versionsChanged | Should -Be $expectedVersionsChanged
+
+            $expectedVersionsChanged = [ordered]@{
+                '0.1.0' = @{
+                    from = '0.1.0'
+                    to = '0.1.0'
+                    kind = 'existing'
+                }
+                '0.1.1' = @{
+                    from = '0.1.1'
+                    to = '0.1.1'
+                    kind = 'new'
+                }
+                '1.0.0' = @{
+                    from = '1.0.0'
+                    to = '1.0.0'
+                    kind = 'existing'
+                }
+                '1.0.1' = @{
+                    from = '1.0.1'
+                    to = '1.0.1'
+                    kind = 'new'
+                }
+                '1.2.0' = @{
+                    from = '1.2.0'
+                    to = '1.2.0'
+                    kind = 'new'
+                }
+                '2.0.0' = @{
+                    from = '2.0.0'
+                    to = '2.0.0'
+                    kind = 'new'
+                }
+            }
+
+            $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $versionsNew -ChangeScope patch -AsObject
 
             @( $versionsChanged.Keys ) | Should -Be @( $expectedVersionsChanged.Keys )
             $versionsChanged.Keys | % {
