@@ -35,12 +35,18 @@ Describe "Get-VersionsChanged" -Tag 'Unit' {
 
         It "Gets new versions" {
             $versions = @(
-                '0.0.0'
                 '0.1.0'
                 '1.0.0'
             )
             $VersionsNew = @(
-                '0.0.0'
+                '0.1.0'
+                '0.1.1'
+                '1.0.0'
+                '1.0.1'
+                '1.2.0'
+                '2.0.0'
+            )
+            $expectedVersionsChanged = @(
                 '0.1.1'
                 '1.0.1'
                 '1.2.0'
@@ -48,14 +54,9 @@ Describe "Get-VersionsChanged" -Tag 'Unit' {
             )
             $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $VersionsNew
 
-            $versionsChanged | Should -Be $versionsNew
+            $versionsChanged | Should -Be $expectedVersionsChanged
 
             $expectedVersionsChanged = [ordered]@{
-                '0.0.0'  = @{
-                    from = '0.0.0'
-                    to = '0.0.0'
-                    kind = 'existing'
-                }
                 '0.1.1' = @{
                     from = '0.1.0'
                     to = '0.1.1'
