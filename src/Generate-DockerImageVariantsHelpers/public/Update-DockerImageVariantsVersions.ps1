@@ -66,14 +66,16 @@ function Update-DockerImageVariantsVersions {
                     }
 
                     if ($vc['kind'] -eq 'new') {
-                        "> New: $( $vc['to'] )" | Write-Host -ForegroundColor Green
-                        $versions = @(
-                            $vc['to']
-                            Get-DockerImageVariantsVersions
-                        )
-                        Set-DockerImageVariantsVersions -Versions $versions
-                        if ($PR) {
-                            $prs += $_pr = New-DockerImageVariantsPR -Version $vc['to'] -Verb add -CommitPreScriptblock $CommitPreScriptblock
+                        if ($vc['to'] -notin (Get-DockerImageVariantsVersions)) {
+                            "> New: $( $vc['to'] )" | Write-Host -ForegroundColor Green
+                            $versions = @(
+                                $vc['to']
+                                Get-DockerImageVariantsVersions
+                            )
+                            Set-DockerImageVariantsVersions -Versions $versions
+                            if ($PR) {
+                                $prs += $_pr = New-DockerImageVariantsPR -Version $vc['to'] -Verb add -CommitPreScriptblock $CommitPreScriptblock
+                            }
                         }
                     }elseif ($vc['kind'] -eq 'update') {
                         $versions = [System.Collections.ArrayList]@()
