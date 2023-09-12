@@ -72,6 +72,7 @@ function Update-DockerImageVariantsVersions {
                                 $vc['to']
                                 Get-DockerImageVariantsVersions
                             )
+                            $versions = $versions | Select-Object -Unique | Sort-Object { [version]$_ } -Descending
                             Set-DockerImageVariantsVersions -Versions $versions
                             if ($PR) {
                                 $prs += $_pr = New-DockerImageVariantsPR -Version $vc['to'] -Verb add -CommitPreScriptblock $CommitPreScriptblock
@@ -87,6 +88,7 @@ function Update-DockerImageVariantsVersions {
                                 $versions.Add($v) > $null
                             }
                         }
+                        $versions = $versions | Select-Object -Unique | Sort-Object { [version]$_ } -Descending
                         Set-DockerImageVariantsVersions -Versions $versions
                         if ($PR) {
                             $prs += $_pr = New-DockerImageVariantsPR -Version $vc['from'] -VersionNew $vc['to'] -Verb update -CommitPreScriptblock $CommitPreScriptblock
