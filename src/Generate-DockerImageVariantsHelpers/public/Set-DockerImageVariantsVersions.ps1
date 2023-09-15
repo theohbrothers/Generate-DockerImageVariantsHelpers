@@ -18,11 +18,11 @@ function Set-DockerImageVariantsVersions {
         }
 
         $VERSIONS_JSON_FILE = "./generate/definitions/versions.json"
-        "Writing $VERSIONS_JSON_FILE" | Write-Verbose
         $content = ConvertTo-Json $Versions -Depth 100
         if ($DoubleNewlines) {
             $content = ($content -replace "`n", "`n`n").Trim()
         }
+        "Writing $VERSIONS_JSON_FILE" | Write-Host -ForegroundColor Green
         $content | Set-Content $VERSIONS_JSON_FILE -Encoding utf8
     }
 }
