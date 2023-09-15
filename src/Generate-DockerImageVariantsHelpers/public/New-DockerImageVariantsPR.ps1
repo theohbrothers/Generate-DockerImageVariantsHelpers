@@ -69,7 +69,10 @@ Signed-off-by: $( { git config --global user.name } | Execute-Command ) <$( { gi
             # }
 
             if ($PSCmdlet.ShouldProcess("PR", 'create')) {
-                $env:GITHUB_TOKEN = if ($env:GITHUB_TOKEN) { $env:GITHUB_TOKEN } else { (Get-Content ~/.git-credentials -Encoding utf8 -Force) -split "`n" | % { if ($_ -match '^https://[^:]+:([^:]+)@github.com') { $matches[1] } } | Select-Object -First 1 }
+                $env:GITHUB_TOKEN = if ($env:GITHUB_TOKEN) { $env:GITHUB_TOKEN } else { (Get-Content ~/.git-credentials -Encoding utf8 -Force -ErrorAction SilentlyContinue) -split "`n" | % { if ($_ -match '^https://[^:]+:([^:]+)@github.com') { $matches[1] } } | Select-Object -First 1 }
+                if (!$env:GITHUB_TOKEN) {
+                    throw "GITHUB_TOKEN env var is empty"
+                }
                 $owner = ({ git remote get-url origin } | Execute-Command) -replace 'https://github.com/([^/]+)/([^/]+)', '$1'
                 $project = ({ git remote get-url origin } | Execute-Command) -replace 'https://github.com/([^/]+)/([^/]+)', '$2' -replace '\.git$', ''
                 $milestoneTitle = 'next-release'
