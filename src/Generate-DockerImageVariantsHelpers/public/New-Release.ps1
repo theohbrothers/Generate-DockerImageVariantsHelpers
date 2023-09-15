@@ -9,7 +9,10 @@ function New-Release {
     try {
         $ErrorActionPreference = 'Stop'
         if ($PSCmdlet.ShouldProcess("token, owner, and project", 'get')) {
-            $env:GITHUB_TOKEN = if ($env:GITHUB_TOKEN) { $env:GITHUB_TOKEN } else { (Get-Content ~/.git-credentials -Encoding utf8 -Force) -split "`n" | % { if ($_ -match '^https://[^:]+:([^:]+)@github.com') { $matches[1] } } | Select-Object -First 1 }
+            $env:GITHUB_TOKEN = if ($env:GITHUB_TOKEN) { $env:GITHUB_TOKEN } else { (Get-Content ~/.git-credentials -Encoding utf8 -Force -ErrorAction SilentlyContinue) -split "`n" | % { if ($_ -match '^https://[^:]+:([^:]+)@github.com') { $matches[1] } } | Select-Object -First 1 }
+            if (!$env:GITHUB_TOKEN) {
+                throw "GITHUB_TOKEN env var is empty"
+            }
             $headers = @{
                 'Accept' = 'application/vnd.github+json'
                 'Authorization' = "Bearer $env:GITHUB_TOKEN"
