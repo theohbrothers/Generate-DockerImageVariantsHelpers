@@ -51,17 +51,15 @@ function New-Release {
                 state = 'all'
             }
             $milestone = $milestones | ? { $_.title -eq $milestoneTitle -and $_.state -eq 'open' }
-            if (!$milestone) {
-                "Not closing open milestone '$milestoneTitle' because it is not open or does not exist" | Write-Warning
-            }else {
+            if ($milestone) {
                 if ($milestoneClash = $milestones | ? { $_.title -eq $tagNext }) {
-                    "Renaming existing milestone to '$tagNext' to '$tagNext-renamed' to prevent clash" | Write-Warning
+                    "Renaming existing milestone '$tagNext' to '$tagNext-renamed' to prevent clash" | Write-Warning
                     $milestoneClash = Invoke-RestMethod -Method PATCH -Headers $headers -Uri "https://api.github.com/repos/$owner/$project/milestones/$( $milestoneClash[0].number )" -Body (@{
                         title = "$tagNext-renamed"
                     } | ConvertTo-Json -Depth 100)
                 }
 
-                "Renaming milestone from '$( $milestone.title )' to '$tagNext'" | Write-Host -ForegroundColor Green
+                "Renaming milestone '$( $milestone.title )' to '$tagNext'" | Write-Host -ForegroundColor Green
                 $milestone = Invoke-RestMethod -Method PATCH -Headers $headers -Uri "https://api.github.com/repos/$owner/$project/milestones/$( $milestone.number )" -Body (@{
                     title = $tagNext
                 } | ConvertTo-Json -Depth 100)
@@ -75,6 +73,8 @@ function New-Release {
                         throw "Failed to close milestone"
                     }
                 }
+            }else {
+                "Not closing open milestone '$milestoneTitle' because does not exist, or is not open" | Write-Warning
             }
         }
 
