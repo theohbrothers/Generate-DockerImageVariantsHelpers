@@ -95,7 +95,7 @@ Describe "New-Release" -Tag 'Unit' {
     It "Creates new tag, renames and closes milestone (-WhatIf)" {
         $tag = New-Release -WhatIf -ErrorVariable err 6>$null 3>$null
 
-        Assert-MockCalled git -Scope It -Times 0
+        Assert-MockCalled git -Scope It -Times 2
         Assert-MockCalled Get-TagNext -Scope It -Times 1
         Assert-MockCalled Invoke-RestMethod -Scope It -Times 0
         $tag | Should -Be $null

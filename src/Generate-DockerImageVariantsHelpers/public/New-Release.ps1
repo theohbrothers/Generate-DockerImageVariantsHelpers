@@ -23,6 +23,9 @@ function New-Release {
         }
         $defaultBranch = 'master'
 
+        { git checkout $defaultBranch } | Execute-Command
+        { git pull origin $defaultBranch } | Execute-Command
+
         $tagNext = if ($TagConvention) {
             Get-TagNext -TagConvention $TagConvention
         }else {
@@ -31,8 +34,6 @@ function New-Release {
 
         if ($PSCmdlet.ShouldProcess("<tag>", 'create')) {
             "Creating next tag on '$defaultBranch': $tagNext" | Write-Host -ForegroundColor Green
-            { git checkout master } | Execute-Command
-            { git pull origin master } | Execute-Command
             { git tag $tagNext } | Execute-Command
             { git push origin $tagNext } | Execute-Command
         }
