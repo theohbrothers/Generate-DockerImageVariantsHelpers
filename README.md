@@ -38,11 +38,12 @@ $versionsConfig = Get-DockerImageVariantsVersions
 # Set generate/definitions/versions.json
 Set-DockerImageVariantsVersions -Versions @{
     coolpackage = @{
-        versionsNewScript = 'Invoke-RestMethod https://example.com/versions.json'
         versions = @(
             '0.1.0'
             '0.2.0'
         )
+        versionsChangeScope = 'minor'
+        versionsNewScript = 'Invoke-RestMethod https://example.com/versions.json'
     }
 } #-WhatIf
 
@@ -70,10 +71,10 @@ foreach ($pr in $prs) {
     $pr = Automerge-DockerImageVariantsPR -PR $pr #-WhatIf
 }
 
-# Update generate/definitions/versions.json and open a PR for each changed version, and merge successful PRs one after another (to prevent merge conflicts)
+# Update ./generate/definitions/versions.json and open a PR for each changed version, and merge successful PRs one after another (to prevent merge conflicts)
 $env:GITHUB_TOKEN = 'xxx'
 $autoMergeResults = Update-DockerImageVariantsVersions -PR -AutoMergeQueue #-WhatIf
-# Update generate/definitions/versions.json and open a PR for each changed version, and merge successful PRs one after another (to prevent merge conflicts), and create a tagged release and close milestone
+# Update ./generate/definitions/versions.json and open a PR for each changed version, and merge successful PRs one after another (to prevent merge conflicts), and create a tagged release and close milestone
 $autoMergeResults = Update-DockerImageVariantsVersions -PR -AutoMergeQueue -AutoRelease -AutoReleaseTagConvention calver #-WhatIf
 $autoMergeResults = Update-DockerImageVariantsVersions -PR -AutoMergeQueue -AutoRelease -AutoReleaseTagConvention semver #-WhatIf
 
