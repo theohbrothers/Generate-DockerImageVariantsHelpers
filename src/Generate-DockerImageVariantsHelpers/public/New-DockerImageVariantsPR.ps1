@@ -41,14 +41,14 @@ function New-DockerImageVariantsPR {
                     { Generate-DockerImageVariants . } | Execute-Command | Write-Host
                 }
                 $BRANCH = if ($Verb -eq 'add') {
-                    "enhancement/add-v$( $Version.Major ).$( $Version.Minor ).$( $Version.Build )-variants"
+                    "enhancement/add-$( $Version.Major ).$( $Version.Minor ).$( $Version.Build )-variants"
                 }elseif ($Verb -eq 'update') {
-                    "enhancement/bump-v$( $Version.Major ).$( $Version.Minor )-variants-to-v$( $VersionNew )"
+                    "enhancement/bump-$( $Version.Major ).$( $Version.Minor )-variants-to-$( $VersionNew )"
                 }
                 $COMMIT_MSG = if ($Verb -eq 'add') {
-                    "Enhancement: Add v$( $Version.Major ).$( $Version.Minor ).$( $Version.Build ) variants"
+                    "Enhancement: Add $( $Version.Major ).$( $Version.Minor ).$( $Version.Build ) variants"
                 }elseif ($Verb -eq 'update') {
-                    "Enhancement: Bump v$( $Version.Major ).$( $Version.Minor ) variants to v$( $VersionNew )"
+                    "Enhancement: Bump $( $Version.Major ).$( $Version.Minor ) variants to $( $VersionNew )"
                 }
                 $existingBranch = { git rev-parse --verify $BRANCH } | Execute-Command -ErrorAction Continue
                 if ($existingBranch) {
