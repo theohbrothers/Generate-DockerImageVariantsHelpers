@@ -1,10 +1,6 @@
 function Update-DockerImageVariantsVersions {
     [CmdletBinding(DefaultParameterSetName='Default',SupportsShouldProcess)]
     param (
-        [Parameter(Mandatory,ParameterSetName='Default',Position=0)]
-        [ValidateNotNullOrEmpty()]
-        [System.Collections.Specialized.OrderedDictionary]$VersionsChanged
-    ,
         [Parameter(HelpMessage='Scriptblock to run before git add and git commit on a PR branch')]
         [Parameter(ParameterSetName='Default')]
         [Parameter(ParameterSetName='Pipeline')]
@@ -30,26 +26,13 @@ function Update-DockerImageVariantsVersions {
         [Parameter(ParameterSetName='Pipeline')]
         [ValidateSet('calver', 'semver')]
         [string]$AutoReleaseTagConvention
-    ,
-        [Parameter(ValueFromPipeline,ParameterSetName='Pipeline')]
-        [ValidateNotNullOrEmpty()]
-        [System.Collections.Specialized.OrderedDictionary]$InputObject
     )
 
     process {
+        Set-StrictMode -Version Latest
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
         try {
-            if ($InputObject) {
-                $VersionsChanged = $InputObject
-            }
-
-            $changedCount = ($versionsChanged.Values | ? { $_['kind'] -ne 'existing' } | Measure-Object).Count
-            if ($changedCount -eq 0) {
-                "No changed versions. Nothing to do" | Write-Host -ForegroundColor Green
-                return
-            }
-
             $prs = @()
             $autoMergeResults = [ordered]@{
                 AllPRs = @()
@@ -57,61 +40,83 @@ function Update-DockerImageVariantsVersions {
                 FailCount = 0
             }
             $_pr = $null
-            foreach ($vc in $VersionsChanged.Values) {
-                # Update versions.json and open PR
-                if ($vc['kind'] -eq 'new' -or $vc['kind'] -eq 'update') {
-                    if ($PR) {
-                        { git checkout master } | Execute-Command | Write-Host
-                        { git pull origin master } | Execute-Command | Write-Host
-                    }
+            $versionsConfig = Get-DockerImageVariantsVersions
+            foreach ($pkg in $versionsConfig.psobject.Properties.Name) {
+                $versions = $versionsConfig.$pkg.versions
+                $versionsNew = try {
+                    Invoke-Command -ScriptBlock ([scriptblock]::Create($versionsConfig.$pkg.versionsNewScript))
+                }catch {
+                    "Error in $pkg.versionsNewScript. Please review." | Write-Warning
+                    throw
+                }
+                if ($null -eq $versionsNew) {
+                    throw "$pkg.versionsNewScript returned null. It should return an array of versions (semver)."
+                }
+                $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $versionsNew -AsObject -Descending
 
-                    if ($vc['kind'] -eq 'new') {
-                        if ($vc['to'] -notin (Get-DockerImageVariantsVersions)) {
-                            "> New: $( $vc['to'] )" | Write-Host -ForegroundColor Green
-                            $versions = @(
-                                $vc['to']
-                                Get-DockerImageVariantsVersions
-                            )
-                            $versions = $versions | Select-Object -Unique | Sort-Object { [version]$_ } -Descending
-                            Set-DockerImageVariantsVersions -Versions $versions
+                $changedCount = ($versionsChanged.Values | ? { $_['kind'] -ne 'existing' } | Measure-Object).Count
+                if ($changedCount -eq 0) {
+                    "No changed versions. Nothing to do" | Write-Host -ForegroundColor Green
+                }else {
+                    foreach ($vc in $VersionsChanged.Values) {
+                        # Update versions.json and open PR
+                        if ($vc['kind'] -eq 'new' -or $vc['kind'] -eq 'update') {
                             if ($PR) {
-                                $prs += $_pr = New-DockerImageVariantsPR -Version $vc['to'] -Verb add -CommitPreScriptblock $CommitPreScriptblock
+                                { git checkout master } | Execute-Command | Write-Host
+                                { git pull origin master } | Execute-Command | Write-Host
                             }
-                        }
-                    }elseif ($vc['kind'] -eq 'update') {
-                        $versions = [System.Collections.ArrayList]@()
-                        foreach ($v in (Get-DockerImageVariantsVersions)) {
-                            if ($v -eq $vc['from']) {
-                                "> Update: $( $vc['from'] ) to $( $vc['to'] )" | Write-Host -ForegroundColor Green
-                                $versions.Add($vc['to']) > $null
-                            }else {
-                                $versions.Add($v) > $null
-                            }
-                        }
-                        $versions = $versions | Select-Object -Unique | Sort-Object { [version]$_ } -Descending
-                        Set-DockerImageVariantsVersions -Versions $versions
-                        if ($PR) {
-                            $prs += $_pr = New-DockerImageVariantsPR -Version $vc['from'] -VersionNew $vc['to'] -Verb update -CommitPreScriptblock $CommitPreScriptblock
-                        }
-                    }
 
-                    # Merge PR
-                    if ($PR -and $AutoMergeQueue) {
-                        if ($WhatIfPreference) {
-                            $_pr = [pscustomobject]@{
-                                number = 1
+                            if ($vc['kind'] -eq 'new') {
+                                if ($vc['to'] -notin $versions) {
+                                    "> New: $( $vc['to'] )" | Write-Host -ForegroundColor Green
+                                    $versionsUpdated = @(
+                                        $vc['to']
+                                        $versions
+                                    )
+                                    $versionsUpdated = $versionsUpdated | Select-Object -Unique | Sort-Object { [version]$_ } -Descending
+                                    $versionsConfig.$pkg.versions = $versionsUpdated
+                                    Set-DockerImageVariantsVersions -Versions $versionsConfig
+                                    if ($PR) {
+                                        $prs += $_pr = New-DockerImageVariantsPR -Package $pkg -Version $vc['to'] -Verb add -CommitPreScriptblock $CommitPreScriptblock
+                                    }
+                                }
+                            }elseif ($vc['kind'] -eq 'update') {
+                                $versionsUpdated = [System.Collections.ArrayList]@()
+                                foreach ($v in $versions) {
+                                    if ($v -eq $vc['from']) {
+                                        "> Update: $( $vc['from'] ) to $( $vc['to'] )" | Write-Host -ForegroundColor Green
+                                        $versionsUpdated.Add($vc['to']) > $null
+                                    }else {
+                                        $versionsUpdated.Add($v) > $null
+                                    }
+                                }
+                                $versionsUpdated = $versionsUpdated | Select-Object -Unique | Sort-Object { [version]$_ } -Descending
+                                $versionsConfig.$pkg.versions = $versionsUpdated
+                                Set-DockerImageVariantsVersions -Versions $versionsConfig
+                                if ($PR) {
+                                    $prs += $_pr = New-DockerImageVariantsPR -Package $pkg -Version $vc['from'] -VersionNew $vc['to'] -Verb update -CommitPreScriptblock $CommitPreScriptblock
+                                }
                             }
-                        }
-                        try {
-                            "Will automerge PR #$( $_pr.number )" | Write-Host -ForegroundColor Green
-                            $autoMergeResults['AllPRs'] += Automerge-DockerImageVariantsPR -PR $_pr
-                            "Automerge succeeded for PR #$( $_pr.number )" | Write-Host -ForegroundColor Green
-                        }catch {
-                            "Automerge failed for PR #$( $_pr.number )" | Write-Warning
-                            $_ | Write-Error -ErrorAction Continue
-                            $autoMergeResults['AllPRs'] += $_pr
-                            $autoMergeResults['FailPRNumbers'] += $_pr.number
-                            $autoMergeResults['FailCount']++
+
+                            # Merge PR
+                            if ($PR -and $AutoMergeQueue) {
+                                if ($WhatIfPreference) {
+                                    $_pr = [pscustomobject]@{
+                                        number = 1
+                                    }
+                                }
+                                try {
+                                    "Will automerge PR #$( $_pr.number )" | Write-Host -ForegroundColor Green
+                                    $autoMergeResults['AllPRs'] += Automerge-DockerImageVariantsPR -PR $_pr
+                                    "Automerge succeeded for PR #$( $_pr.number )" | Write-Host -ForegroundColor Green
+                                }catch {
+                                    "Automerge failed for PR #$( $_pr.number )" | Write-Warning
+                                    $_ | Write-Error -ErrorAction Continue
+                                    $autoMergeResults['AllPRs'] += $_pr
+                                    $autoMergeResults['FailPRNumbers'] += $_pr.number
+                                    $autoMergeResults['FailCount']++
+                                }
+                            }
                         }
                     }
                 }

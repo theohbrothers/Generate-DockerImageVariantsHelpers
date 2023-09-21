@@ -1,6 +1,10 @@
 function New-DockerImageVariantsPR {
     [CmdletBinding(SupportsShouldProcess)]
     param (
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [string]$Package
+    ,
         [Parameter(Mandatory,Position=0)]
         [ValidateNotNullOrEmpty()]
         [version]$Version
@@ -41,14 +45,14 @@ function New-DockerImageVariantsPR {
                     { Generate-DockerImageVariants . } | Execute-Command | Write-Host
                 }
                 $BRANCH = if ($Verb -eq 'add') {
-                    "enhancement/add-$( $Version.Major ).$( $Version.Minor ).$( $Version.Build )-variants"
+                    "enhancement/add-$Package-$( $Version.Major ).$( $Version.Minor ).$( $Version.Build )-variants"
                 }elseif ($Verb -eq 'update') {
-                    "enhancement/bump-$( $Version.Major ).$( $Version.Minor )-variants-to-$( $VersionNew )"
+                    "enhancement/bump-$Package-$( $Version.Major ).$( $Version.Minor )-variants-to-$( $VersionNew )"
                 }
                 $COMMIT_MSG = if ($Verb -eq 'add') {
-                    "Enhancement: Add $( $Version.Major ).$( $Version.Minor ).$( $Version.Build ) variants"
+                    "Enhancement: Add $Package $( $Version.Major ).$( $Version.Minor ).$( $Version.Build ) variants"
                 }elseif ($Verb -eq 'update') {
-                    "Enhancement: Bump $( $Version.Major ).$( $Version.Minor ) variants to $( $VersionNew )"
+                    "Enhancement: Bump $Package $( $Version.Major ).$( $Version.Minor ) variants to $( $VersionNew )"
                 }
                 $existingBranch = { git rev-parse --verify $BRANCH } | Execute-Command -ErrorAction Continue
                 if ($existingBranch) {

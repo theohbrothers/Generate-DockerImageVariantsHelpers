@@ -48,7 +48,7 @@ Describe "New-DockerImageVariantsPR" -Tag 'Unit' {
                     ref = 'master'
                 }
                 head = [pscustomobject]@{
-                    ref = "enhancement/add-$version-variants"
+                    ref = "enhancement/add-$package-$version-variants"
                 }
             }
         }
@@ -59,11 +59,12 @@ Describe "New-DockerImageVariantsPR" -Tag 'Unit' {
                     ref = 'master'
                 }
                 head = [pscustomobject]@{
-                    ref = "enhancement/bump-$( $Version.Major ).$( $Version.Minor )-variants-to-$( $VersionNew )"
+                    ref = "enhancement/bump-$package-$( $Version.Major ).$( $Version.Minor )-variants-to-$( $VersionNew )"
                 }
             }
         }
         $env:GITHUB_TOKEN = 'foo'
+        $package = 'coolpackage'
         $version = [version]'1.0.0'
         $versionNew = [version]'2.0.0'
     }
@@ -77,7 +78,7 @@ Describe "New-DockerImageVariantsPR" -Tag 'Unit' {
                 throw "some exception"
             }
 
-            New-DockerImageVariantsPR -Version $version -Verb add -ErrorVariable err 2>$null 6>$null
+            New-DockerImageVariantsPR -Package $package -Version $version -Verb add -ErrorVariable err 2>$null 6>$null
 
             $err | Should -Not -Be $null
         }
@@ -88,7 +89,7 @@ Describe "New-DockerImageVariantsPR" -Tag 'Unit' {
             }
 
             {
-                New-DockerImageVariantsPR -Version $version -Verb add -ErrorAction Stop 6>$null
+                New-DockerImageVariantsPR -Package $package -Version $version -Verb add -ErrorAction Stop 6>$null
             } | Should -Throw "some exception"
         }
 
@@ -98,7 +99,7 @@ Describe "New-DockerImageVariantsPR" -Tag 'Unit' {
             Mock Get-GitHubPullRequest {}
             Mock New-GitHubPullRequest { Get-AddPR }
 
-            $pr = New-DockerImageVariantsPR -Version $version -Verb add -ErrorAction Stop 6>$null
+            $pr = New-DockerImageVariantsPR -Package $package -Version $version -Verb add -ErrorAction Stop 6>$null
 
             Assert-MockCalled Get-GitHubMilestone -Scope It -Times 1
             Assert-MockCalled New-GitHubMilestone -Scope It -Times 1
@@ -113,7 +114,7 @@ Describe "New-DockerImageVariantsPR" -Tag 'Unit' {
             Mock Get-GitHubPullRequest {}
             Mock New-GitHubPullRequest { Get-AddPR }
 
-            $pr = New-DockerImageVariantsPR -Version $version -Verb add -WhatIf -ErrorVariable err 6>$null
+            $pr = New-DockerImageVariantsPR -Package $package -Version $version -Verb add -WhatIf -ErrorVariable err 6>$null
 
             Assert-MockCalled Get-GitHubMilestone -Scope It -Times 0
             Assert-MockCalled New-GitHubMilestone -Scope It -Times 0
@@ -129,7 +130,7 @@ Describe "New-DockerImageVariantsPR" -Tag 'Unit' {
             Mock Get-GitHubPullRequest { Get-AddPR }
             Mock New-GitHubPullRequest {}
 
-            $pr = New-DockerImageVariantsPR -Version $version -Verb add -ErrorAction Stop 6>$null
+            $pr = New-DockerImageVariantsPR -Package $package -Version $version -Verb add -ErrorAction Stop 6>$null
 
             Assert-MockCalled Get-GitHubMilestone -Scope It -Times 1
             Assert-MockCalled New-GitHubMilestone -Scope It -Times 0
@@ -155,7 +156,7 @@ Describe "New-DockerImageVariantsPR" -Tag 'Unit' {
             Mock Get-GitHubPullRequest {}
             Mock New-GitHubPullRequest { Get-UpdatePR }
 
-            $pr = New-DockerImageVariantsPR -Version $version -VersionNew $VersionNew -Verb update -ErrorAction Stop 6>$null
+            $pr = New-DockerImageVariantsPR -Package $package -Version $version -VersionNew $VersionNew -Verb update -ErrorAction Stop 6>$null
 
             Assert-MockCalled Get-GitHubMilestone -Scope It -Times 1
             Assert-MockCalled New-GitHubMilestone -Scope It -Times 1
@@ -170,7 +171,7 @@ Describe "New-DockerImageVariantsPR" -Tag 'Unit' {
             Mock Get-GitHubPullRequest { Get-UpdatePR }
             Mock New-GitHubPullRequest {}
 
-            $pr = New-DockerImageVariantsPR -Version $version -VersionNew $VersionNew -Verb update -ErrorAction Stop 6>$null
+            $pr = New-DockerImageVariantsPR -Package $package -Version $version -VersionNew $VersionNew -Verb update -ErrorAction Stop 6>$null
 
             Assert-MockCalled Get-GitHubMilestone -Scope It -Times 1
             Assert-MockCalled New-GitHubMilestone -Scope It -Times 0
@@ -187,7 +188,7 @@ Describe "New-DockerImageVariantsPR" -Tag 'Unit' {
             function Cool-Function {}
             Mock Cool-Function {}
 
-            $pr = New-DockerImageVariantsPR -Version $version -VersionNew $VersionNew -Verb update -CommitPreScriptblock { Cool-Function } -ErrorAction Stop 6>$null
+            $pr = New-DockerImageVariantsPR -Package $package -Version $version -VersionNew $VersionNew -Verb update -CommitPreScriptblock { Cool-Function } -ErrorAction Stop 6>$null
 
             Assert-MockCalled Cool-Function -Scope It -Times 1
             Assert-MockCalled Get-GitHubMilestone -Scope It -Times 1
