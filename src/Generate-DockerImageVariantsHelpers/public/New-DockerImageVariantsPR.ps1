@@ -46,17 +46,9 @@ function New-DockerImageVariantsPR {
                     "enhancement/bump-v$( $Version.Major ).$( $Version.Minor )-variants-to-v$( $VersionNew )"
                 }
                 $COMMIT_MSG = if ($Verb -eq 'add') {
-                @"
-Enhancement: Add v$( $Version.Major ).$( $Version.Minor ).$( $Version.Build ) variants
-
-Signed-off-by: $( { git config --global user.name } | Execute-Command ) <$( { git config --global user.email } | Execute-Command )>
-"@
+                    "Enhancement: Add v$( $Version.Major ).$( $Version.Minor ).$( $Version.Build ) variants"
                 }elseif ($Verb -eq 'update') {
-            @"
-Enhancement: Bump v$( $Version.Major ).$( $Version.Minor ) variants to v$( $VersionNew )
-
-Signed-off-by: $( { git config --global user.name } | Execute-Command ) <$( { git config --global user.email } | Execute-Command )>
-"@
+                    "Enhancement: Bump v$( $Version.Major ).$( $Version.Minor ) variants to v$( $VersionNew )"
                 }
                 $existingBranch = { git rev-parse --verify $BRANCH } | Execute-Command -ErrorAction Continue
                 if ($existingBranch) {
@@ -64,7 +56,7 @@ Signed-off-by: $( { git config --global user.name } | Execute-Command ) <$( { gi
                 }
                 { git checkout -b $BRANCH } | Execute-Command | Write-Host
                 { git add . } | Execute-Command | Write-Host
-                { git commit -m "$COMMIT_MSG" } | Execute-Command | Write-Host
+                { git commit -m "$COMMIT_MSG" --signoff } | Execute-Command | Write-Host
                 { git push origin $BRANCH -f } | Execute-Command | Write-Host
             # }
 
