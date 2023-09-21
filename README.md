@@ -33,10 +33,18 @@ $repo = Clone-TempRepo
 cd $repo
 
 # Get generate/definitions/versions.json
-Get-DockerImageVariantsVersions
+$versionsConfig = Get-DockerImageVariantsVersions
 
 # Set generate/definitions/versions.json
-Set-DockerImageVariantsVersions -Versions @( '0.1.0', '0.2.0' ) #-WhatIf
+Set-DockerImageVariantsVersions -Versions @{
+    coolpackage = @{
+        versionsNewScript = 'Invoke-RestMethod https://example.com/versions.json'
+        versions = @(
+            '0.1.0'
+            '0.2.0'
+        )
+    }
+} #-WhatIf
 
 # Execute commands
 { git status } | Execute-Command -ErrorAction Stop #-WhatIf
@@ -49,10 +57,10 @@ $env:GITHUB_TOKEN = 'xxx'
 $prs = @(
     foreach ($c in $versionsChanged.Values) {
         if ($c['kind'] -eq 'new') {
-            New-DockerImageVariantsPR -Version $c['to'] -Verb add #-WhatIf
+            New-DockerImageVariantsPR -Package coolpackage -Version $c['to'] -Verb add #-WhatIf
         }
         if ($c['kind'] -eq 'update') {
-            New-DockerImageVariantsPR -Version $c['from'] -VersionNew $c['to'] -Verb update #-WhatIf
+            New-DockerImageVariantsPR -Package coolpackage -Version $c['from'] -VersionNew $c['to'] -Verb update #-WhatIf
         }
     }
 )
@@ -64,10 +72,10 @@ foreach ($pr in $prs) {
 
 # Update generate/definitions/versions.json and open a PR for each changed version, and merge successful PRs one after another (to prevent merge conflicts)
 $env:GITHUB_TOKEN = 'xxx'
-$autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue #-WhatIf
+$autoMergeResults = Update-DockerImageVariantsVersions -PR -AutoMergeQueue #-WhatIf
 # Update generate/definitions/versions.json and open a PR for each changed version, and merge successful PRs one after another (to prevent merge conflicts), and create a tagged release and close milestone
-$autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -AutoRelease -AutoReleaseTagConvention calver #-WhatIf
-$autoMergeResults = Update-DockerImageVariantsVersions -VersionsChanged $versionsChanged -PR -AutoMergeQueue -AutoRelease -AutoReleaseTagConvention semver #-WhatIf
+$autoMergeResults = Update-DockerImageVariantsVersions -PR -AutoMergeQueue -AutoRelease -AutoReleaseTagConvention calver #-WhatIf
+$autoMergeResults = Update-DockerImageVariantsVersions -PR -AutoMergeQueue -AutoRelease -AutoReleaseTagConvention semver #-WhatIf
 
 # Get next tag
 $tag = Get-TagNext -TagConvention calver
