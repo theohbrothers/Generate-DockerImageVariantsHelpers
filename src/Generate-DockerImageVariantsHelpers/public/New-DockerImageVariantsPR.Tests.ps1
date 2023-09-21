@@ -48,7 +48,7 @@ Describe "New-DockerImageVariantsPR" -Tag 'Unit' {
                     ref = 'master'
                 }
                 head = [pscustomobject]@{
-                    ref = "enhancement/add-v$version-variants"
+                    ref = "enhancement/add-$version-variants"
                 }
             }
         }
@@ -59,7 +59,7 @@ Describe "New-DockerImageVariantsPR" -Tag 'Unit' {
                     ref = 'master'
                 }
                 head = [pscustomobject]@{
-                    ref = "enhancement/bump-v$( $Version.Major ).$( $Version.Minor )-variants-to-v$( $VersionNew )"
+                    ref = "enhancement/bump-$( $Version.Major ).$( $Version.Minor )-variants-to-$( $VersionNew )"
                 }
             }
         }
