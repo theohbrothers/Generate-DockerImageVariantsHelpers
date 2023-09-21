@@ -60,6 +60,7 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
     "versions": [
         "0.1.0"
     ],
+    "versionsChangeScope": "minor",
     "versionsNewScript": "@( 'some versions' )"
   }
 }

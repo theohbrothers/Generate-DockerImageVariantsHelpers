@@ -53,7 +53,8 @@ function Update-DockerImageVariantsVersions {
                     if ($null -eq $versionsNew) {
                         throw "$pkg.versionsNewScript returned null. It should return an array of versions (semver)."
                     }
-                    Get-VersionsChanged -Versions $versions -VersionsNew $versionsNew -AsObject -Descending
+                    $changeScope = $versionsConfig.$pkg.versionsChangeScope
+                    Get-VersionsChanged -Versions $versions -VersionsNew $versionsNew -ChangeScope $changeScope -AsObject -Descending
                 }
 
                 $changedCount = ($versionsChanged.Values | ? { $_['kind'] -ne 'existing' } | Measure-Object).Count
