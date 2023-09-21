@@ -41,18 +41,20 @@ function Update-DockerImageVariantsVersions {
             }
             $_pr = $null
             $versionsConfig = Get-DockerImageVariantsVersions
-            foreach ($pkg in $versionsConfig.psobject.Properties.Name) {
-                $versions = $versionsConfig.$pkg.versions
-                $versionsNew = try {
-                    Invoke-Command -ScriptBlock ([scriptblock]::Create($versionsConfig.$pkg.versionsNewScript))
-                }catch {
-                    "Error in $pkg.versionsNewScript. Please review." | Write-Warning
-                    throw
+            foreach ($pkg in @( $versionsConfig.psobject.Properties.Name )) {
+                $versionsChanged = & {
+                    $versions = $versionsConfig.$pkg.versions
+                    $versionsNew = try {
+                        Invoke-Command -ScriptBlock ([scriptblock]::Create($versionsConfig.$pkg.versionsNewScript))
+                    }catch {
+                        "Error in $pkg.versionsNewScript. Please review." | Write-Warning
+                        throw
+                    }
+                    if ($null -eq $versionsNew) {
+                        throw "$pkg.versionsNewScript returned null. It should return an array of versions (semver)."
+                    }
+                    Get-VersionsChanged -Versions $versions -VersionsNew $versionsNew -AsObject -Descending
                 }
-                if ($null -eq $versionsNew) {
-                    throw "$pkg.versionsNewScript returned null. It should return an array of versions (semver)."
-                }
-                $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $versionsNew -AsObject -Descending
 
                 $changedCount = ($versionsChanged.Values | ? { $_['kind'] -ne 'existing' } | Measure-Object).Count
                 if ($changedCount -eq 0) {
@@ -64,17 +66,17 @@ function Update-DockerImageVariantsVersions {
                             if ($PR) {
                                 { git checkout master } | Execute-Command | Write-Host
                                 { git pull origin master } | Execute-Command | Write-Host
+                                $versionsConfig = Get-DockerImageVariantsVersions   # Get the latest config
                             }
 
                             if ($vc['kind'] -eq 'new') {
-                                if ($vc['to'] -notin $versions) {
+                                if ($vc['to'] -notin $versionsConfig.$pkg.versions) {
                                     "> New: $( $vc['to'] )" | Write-Host -ForegroundColor Green
                                     $versionsUpdated = @(
                                         $vc['to']
-                                        $versions
+                                        $versionsConfig.$pkg.versions
                                     )
-                                    $versionsUpdated = $versionsUpdated | Select-Object -Unique | Sort-Object { [version]$_ } -Descending
-                                    $versionsConfig.$pkg.versions = $versionsUpdated
+                                    $versionsConfig.$pkg.versions = $versionsUpdated | Select-Object -Unique | Sort-Object { [version]$_ } -Descending
                                     Set-DockerImageVariantsVersions -Versions $versionsConfig
                                     if ($PR) {
                                         $prs += $_pr = New-DockerImageVariantsPR -Package $pkg -Version $vc['to'] -Verb add -CommitPreScriptblock $CommitPreScriptblock
@@ -82,7 +84,7 @@ function Update-DockerImageVariantsVersions {
                                 }
                             }elseif ($vc['kind'] -eq 'update') {
                                 $versionsUpdated = [System.Collections.ArrayList]@()
-                                foreach ($v in $versions) {
+                                foreach ($v in $versionsConfig.$pkg.versions) {
                                     if ($v -eq $vc['from']) {
                                         "> Update: $( $vc['from'] ) to $( $vc['to'] )" | Write-Host -ForegroundColor Green
                                         $versionsUpdated.Add($vc['to']) > $null
@@ -90,8 +92,7 @@ function Update-DockerImageVariantsVersions {
                                         $versionsUpdated.Add($v) > $null
                                     }
                                 }
-                                $versionsUpdated = $versionsUpdated | Select-Object -Unique | Sort-Object { [version]$_ } -Descending
-                                $versionsConfig.$pkg.versions = $versionsUpdated
+                                $versionsConfig.$pkg.versions = $versionsUpdated | Select-Object -Unique | Sort-Object { [version]$_ } -Descending
                                 Set-DockerImageVariantsVersions -Versions $versionsConfig
                                 if ($PR) {
                                     $prs += $_pr = New-DockerImageVariantsPR -Package $pkg -Version $vc['from'] -VersionNew $vc['to'] -Verb update -CommitPreScriptblock $CommitPreScriptblock
