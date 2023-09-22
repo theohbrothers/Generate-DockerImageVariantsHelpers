@@ -72,7 +72,7 @@ function Update-DockerImageVariantsVersions {
 
                             if ($vc['kind'] -eq 'new') {
                                 if ($vc['to'] -notin $versionsConfig.$pkg.versions) {
-                                    "> New: $( $vc['to'] )" | Write-Host -ForegroundColor Green
+                                    "> New: $pkg $( $vc['to'] )" | Write-Host -ForegroundColor Green
                                     $versionsUpdated = @(
                                         $vc['to']
                                         $versionsConfig.$pkg.versions
@@ -87,7 +87,7 @@ function Update-DockerImageVariantsVersions {
                                 $versionsUpdated = [System.Collections.ArrayList]@()
                                 foreach ($v in $versionsConfig.$pkg.versions) {
                                     if ($v -eq $vc['from']) {
-                                        "> Update: $( $vc['from'] ) to $( $vc['to'] )" | Write-Host -ForegroundColor Green
+                                        "> Update: $pkg $( $vc['from'] ) to $( $vc['to'] )" | Write-Host -ForegroundColor Green
                                         $versionsUpdated.Add($vc['to']) > $null
                                     }else {
                                         $versionsUpdated.Add($v) > $null
