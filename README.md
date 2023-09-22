@@ -33,13 +33,13 @@ $repo = Clone-TempRepo
 cd $repo
 
 # Create generate/definitions/versions.json
-New-DockerImageVariantsVersions #-Whatif
+New-DockerImageVariantsVersions -Package coolpackage #-Whatif
 
 # Get generate/definitions/versions.json
 $versionsConfig = Get-DockerImageVariantsVersions
 
 # Set generate/definitions/versions.json
-Set-DockerImageVariantsVersions -Versions @{
+Set-DockerImageVariantsVersions @{
     coolpackage = @{
         versions = @(
             '0.1.0'
