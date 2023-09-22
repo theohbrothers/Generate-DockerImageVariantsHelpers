@@ -32,6 +32,9 @@ Import-Module Generate-DockerImageVariantsHelpers
 $repo = Clone-TempRepo
 cd $repo
 
+# Create generate/definitions/versions.json
+New-DockerImageVariantsVersions #-Whatif
+
 # Get generate/definitions/versions.json
 $versionsConfig = Get-DockerImageVariantsVersions
 
