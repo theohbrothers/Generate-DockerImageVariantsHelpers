@@ -127,7 +127,7 @@ function Update-DockerImageVariantsVersions {
             if ($PR -and $AutoMergeQueue) {
                 # Error if any PR failed to merge
                 if ($autoMergeResults['FailCount']) {
-                    $msg = "$( $autoMergeResults['FailCount'] ) PRs failed to merge. PRs: $( ($autoMergeResults['PRs'] | % { "#$_" }) -join ', ' )"
+                    $msg = "$( $autoMergeResults['FailCount'] ) PRs failed to merge. PRs: $( ($autoMergeResults['FailPRNumbers'] | % { "#$_" }) -join ', ' )"
                     if ($ErrorActionPreference -eq 'Stop') {
                         throw $msg
                     }
@@ -138,18 +138,20 @@ function Update-DockerImageVariantsVersions {
                 if ($PSCmdlet.ShouldProcess("Result of merged PRs", 'return')) {
                     $autoMergeResults   # Return the results
                 }
+
+                # Autorelease if all PRs merged
+                if ($AutoRelease) {
+                    if ($autoMergeResults['AllPRs'] -and $autoMergeResults['FailCount'] -eq 0) {
+                        "Will create a tagged release" | Write-Host -ForegroundColor Green
+                        $tag = New-Release -TagConvention:$AutoReleaseTagConvention -WhatIf:$WhatIfPreference
+                        if ($PSCmdlet.ShouldProcess("tag", 'return')) {
+                            $tag
+                        }
+                    }
+                }
             }elseif ($PR) {
                 if ($PSCmdlet.ShouldProcess("PRs", 'return')) {
                     ,$prs   # Return the PRs
-                }
-            }
-
-            # Autorelease if all PRs merged
-            if ($AutoRelease) {
-                "Will create a tagged release" | Write-Host -ForegroundColor Green
-                $tag = New-Release -TagConvention:$AutoReleaseTagConvention -WhatIf:$WhatIfPreference
-                if ($PSCmdlet.ShouldProcess("tag", 'return')) {
-                    $tag
                 }
             }
         }catch {
