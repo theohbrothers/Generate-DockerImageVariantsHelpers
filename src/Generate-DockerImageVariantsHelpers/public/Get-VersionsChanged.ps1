@@ -28,13 +28,21 @@ function Get-VersionsChanged {
         if ($VersionsNew.Count -eq 0) {
             "Both Versions and VersionsNew are empty" | Write-Verbose
         }else {
+            $vnPrev = $null
             foreach ($vn in $VersionsNew) {
+                $vn = [version]$vn
+                if ($ChangeScope -eq 'minor') {
+                    if ($vnPrev -and $vnPrev.Major -eq $vn.Major -and $vnPrev.Minor -eq $vn.Minor) {
+                        continue
+                    }
+                }
                 "Found new version: $vn" | Write-Verbose
                 $versionsChanged["$vn"] = [ordered]@{
                     from = "$vn"
                     to = "$vn"
                     kind = 'new'
                 }
+                $vnPrev = $vn
             }
         }
     }else {

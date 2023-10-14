@@ -24,13 +24,22 @@ Describe "Get-VersionsChanged" -Tag 'Unit' {
             $versionsChanged | Should -Be $versions
         }
 
-        It "Gets new version" {
+        It "Gets new versions (-ChangeScope patch)" {
             $versions = @()
-            $versionsNew = @( '1.0.0' )
+            $versionsNew = @( '1.0.0', '1.0.1' )
 
-            $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $versionsNew
+            $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $versionsNew -ChangeScope patch
 
             $versionsChanged | Should -Be $versionsNew
+        }
+
+        It "Gets new versions (-ChangeScope minor)" {
+            $versions = @()
+            $versionsNew = @( '1.0.0', '1.0.1' )
+
+            $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $versionsNew -ChangeScope minor -Verbose
+
+            $versionsChanged | Should -Be @( '1.0.1' )
         }
 
         It "Gets new versions (-ChangeScope minor)" {
