@@ -33,7 +33,8 @@ $repo = Clone-TempRepo
 cd $repo
 
 # Create generate/definitions/versions.json
-New-DockerImageVariantsVersions -Package coolpackage #-Whatif
+New-DockerImageVariantsVersions -Package coolpackage -VersionsChangeScope minor -VersionsNewScript { Invoke-RestMethod https://example.com/versions.json } #-Whatif
+New-DockerImageVariantsVersions -Package coolpackage -VersionsChangeScope patch -VersionsNewScript { Invoke-RestMethod https://example.com/versions.json } #-Whatif
 
 # Get generate/definitions/versions.json
 $versionsConfig = Get-DockerImageVariantsVersions
@@ -54,7 +55,8 @@ Set-DockerImageVariantsVersions @{
 { git status } | Execute-Command -ErrorAction Stop #-WhatIf
 
 # Get changed versions
-$versionsChanged = Get-VersionsChanged -Versions @( '0.1.0' ) -VersionsNew @( '0.1.1', '0.2.0' ) -AsObject
+$versionsChanged = Get-VersionsChanged -Versions @( '0.1.0' ) -VersionsNew @( '0.1.1', '0.2.0' ) -ChangeScope patch -AsObject
+$versionsChanged = Get-VersionsChanged -Versions @( '0.1.0' ) -VersionsNew @( '0.1.1', '0.2.0' ) -ChangeScope minor -AsObject
 
 # Open PR for each changed version
 $env:GITHUB_TOKEN = 'xxx'

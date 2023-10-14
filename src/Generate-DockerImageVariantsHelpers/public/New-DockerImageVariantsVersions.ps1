@@ -1,9 +1,17 @@
 function New-DockerImageVariantsVersions {
     [CmdletBinding(SupportsShouldProcess)]
     param (
-        [Parameter(Mandatory,Position=0,HelpMessage='Package name')]
+        [Parameter(Mandatory,HelpMessage='Package name')]
         [ValidateNotNull()]
         [string]$Package
+    ,
+        [Parameter(Mandatory=$false,HelpMessage='Versions change scope')]
+        [ValidateSet('minor', 'patch')]
+        [string]$VersionsChangeScope = 'minor'
+    ,
+        [Parameter(Mandatory,HelpMessage='Script to get an array of versions')]
+        [ValidateNotNull()]
+        [object]$VersionsNewScript
     )
 
     process {
@@ -13,27 +21,45 @@ function New-DockerImageVariantsVersions {
                 throw "The file '$VERSIONS_JSON_FILE' already exists"
             }
 
+            $VersionsNewScript = if ($VersionsNewScript -is [scriptblock]) {
+                $VersionsNewScript
+            }else {
+                # This is like Invoke-Expression, dangerous
+                [scriptblock]::Create($VersionsNewScript)
+            }
+
             $content = @{
                 $Package = [ordered]@{
                     versions = @(
-                        '0.0.0'
+                        if ($VersionsNewScript) {
+                            $versionsNew = Invoke-Command $VersionsNewScript
+                            $versionsChanged = Get-VersionsChanged -Versions @() -VersionsNew $versionsNew -ChangeScope $VersionsChangeScope -Descending
+                            $versionsChanged
+                        }
                     )
-                    versionsChangeScope = 'minor'
-                    versionsNewScript = 'Invoke-RestMethod https://example.com/versions.json'
+                    versionsChangeScope = $VersionsChangeScope
+                    versionsNewScript = $versionsNewScript.ToString().Trim()
                 }
             }
             $content = $content | ConvertTo-Json -Depth 100
-            "Creating $VERSIONS_JSON_FILE" | Write-Host -ForegroundColor Green
-            $item = New-Item $VERSIONS_JSON_FILE -ItemType File
-            if ($PSVersionTable.PSVersion.Major -le 5) {
-                [IO.File]::WriteAllLines($item.FullName, $content) # Utf8 without BOM
-            }else {
-                $content | Out-File $item.FullName -Encoding utf8 -Force
+            if ($PSCmdlet.ShouldProcess("$VERSIONS_JSON_FILE")) {
+                "Creating $VERSIONS_JSON_FILE" | Write-Host -ForegroundColor Green
+                $item = New-Item $VERSIONS_JSON_FILE -ItemType File
+                if ($PSVersionTable.PSVersion.Major -le 5) {
+                    [IO.File]::WriteAllLines($item.FullName, $content) # Utf8 without BOM
+                }else {
+                    $content | Out-File $item.FullName -Encoding utf8 -Force
+                }
+
+                $item
             }
-
-            $item
         }catch {
-
+            if ($ErrorActionPreference -eq 'Stop') {
+                throw
+            }
+            if ($ErrorActionPreference -eq 'Continue') {
+                $_ | Write-Error -ErrorAction Continue
+            }
         }
     }
 }
