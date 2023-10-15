@@ -7,8 +7,6 @@ Describe "Set-DockerImageVariantsVersions" {
     Context 'Parameters' {
 
         It "Errors when -Versions is null" {
-            Mock Set-Content {}
-
             {
                 Set-DockerImageVariantsVersions -Versions $null 6>$null
             } | Should -Throw
@@ -28,6 +26,26 @@ Describe "Set-DockerImageVariantsVersions" {
             Pop-Location
             # Assert-MockCalled Set-Content -Scope It -Times 1
             Remove-Item "TestDrive:\generate" -Recurse -Force
+        }
+
+        It "Honors -ErrorAction Continue" {
+            Mock ConvertTo-Json {
+                throw
+            }
+
+            Set-DockerImageVariantsVersions '0.1.0' -ErrorAction Continue -ErrorVariable err 2>$null 6>$null
+
+            $err | Should -Not -Be $null
+        }
+
+        It "Honors -ErrorAction Stop" {
+            Mock ConvertTo-Json {
+                throw
+            }
+
+            {
+                Set-DockerImageVariantsVersions '0.1.0' -ErrorAction Stop 6>$null
+            } | Should -Throw
         }
 
         It "Sets version.json" {

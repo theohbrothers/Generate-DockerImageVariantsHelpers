@@ -13,16 +13,27 @@ function Set-DockerImageVariantsVersions {
     )
 
     process {
-        if ($InputObject) {
-            $Versions = $InputObject
-        }
+        $callerEA = $ErrorActionPreference
+        $ErrorActionPreference = 'Stop'
+        try {
+            if ($InputObject) {
+                $Versions = $InputObject
+            }
 
-        $VERSIONS_JSON_FILE = "./generate/definitions/versions.json"
-        $content = ConvertTo-Json $Versions -Depth 100
-        if ($DoubleNewlines) {
-            $content = ($content -replace "`n", "`n`n").Trim()
+            $VERSIONS_JSON_FILE = "./generate/definitions/versions.json"
+            $content = ConvertTo-Json $Versions -Depth 100
+            if ($DoubleNewlines) {
+                $content = ($content -replace "`n", "`n`n").Trim()
+            }
+            "Writing $VERSIONS_JSON_FILE" | Write-Host -ForegroundColor Green
+            $content | Set-Content $VERSIONS_JSON_FILE -Encoding utf8
+        }catch {
+            if ($callerEA -eq 'Stop') {
+                throw
+            }
+            if ($callerEA -eq 'Continue') {
+                $_ | Write-Error -ErrorAction Continue
+            }
         }
-        "Writing $VERSIONS_JSON_FILE" | Write-Host -ForegroundColor Green
-        $content | Set-Content $VERSIONS_JSON_FILE -Encoding utf8
     }
 }
