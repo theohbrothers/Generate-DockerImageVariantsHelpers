@@ -54,6 +54,7 @@ function Get-VersionsChanged {
                     continue
                 }
             }
+            $vPrev = $null
             foreach ($v in $Versions) {
                 $v = [version]$v
                 if ($vn.Major -gt $v.Major) {
@@ -114,6 +115,33 @@ function Get-VersionsChanged {
                         break
                     }
                 }
+                if ($v -eq [version]$versions[$versions.Count - 1] -and $vn.Major -lt $v.Major) {
+                    if (!$versionsChanged.Contains("$vn")) {
+                        if ($ChangeScope -eq 'patch') {
+                            "Found new version: $vn" | Write-Verbose
+                            $versionsChanged["$vn"] = [ordered]@{
+                                from = "$vn"
+                                to = "$vn"
+                                kind = 'new'
+                            }
+                            break
+                        }
+                        if ($ChangeScope -eq 'minor') {
+                            if ($vPrev -and $vPrev.Minor -eq $v.Minor -and $vPrev.Build -gt $v.Build) {
+                                # Don't add
+                            }else {
+                                "Found new version: $vn" | Write-Verbose
+                                $versionsChanged["$vn"] = [ordered]@{
+                                    from = "$vn"
+                                    to = "$vn"
+                                    kind = 'new'
+                                }
+                            }
+                            break
+                        }
+                    }
+                }
+                $vPrev = $v
             }
             $vnPrev = $vn
         }
