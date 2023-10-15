@@ -72,14 +72,28 @@ Describe "New-Release" -Tag 'Unit' {
         }
     }
 
-    It "Errors if any git commands fail" {
-        Mock git {
-            throw "i am a git error"
-        }
+    It "Honors -ErrorAction Continue" {
+        function Execute-Command { throw }
+
+        New-Release -ErrorVariable err -ErrorAction Continue 2>$null 6>$null
+
+        $err | Should -Not -Be $null
+    }
+
+    It "Honors -ErrorAction Stop" {
+        function Execute-Command { throw }
 
         {
             New-Release -ErrorAction Stop 6>$null
-        } | Should Throw "i am a git error"
+        } | Should -Throw
+    }
+
+    It "Errors if any git commands fail" {
+        Mock git { throw "i am a git error" }
+
+        {
+            New-Release -ErrorAction Stop 6>$null
+        } | Should -Throw "i am a git error"
 
     }
 
