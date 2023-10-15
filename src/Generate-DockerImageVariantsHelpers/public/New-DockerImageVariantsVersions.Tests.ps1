@@ -36,6 +36,23 @@ Describe "New-DockerImageVariantsVersions" {
             Remove-Item "TestDrive:\generate" -Recurse -Force
         }
 
+        It "Honors -ErrorAction Continue" {
+            $item = New-DockerImageVariantsVersions -Package foo -VersionsChangeScope minor -VersionsNewScript { some-invalid-command } -ErrorVariable err -ErrorAction Continue 2>$null
+
+            $err | Should -Match 'some-invalid-command'
+        }
+
+        It "Honors -ErrorAction Stop" {
+            {
+                $item = New-DockerImageVariantsVersions -Package foo -VersionsChangeScope minor -VersionsNewScript { some-invalid-command } -ErrorAction Stop
+            } | Should -Throw
+
+
+            {
+                $item = New-DockerImageVariantsVersions -Package foo -VersionsChangeScope minor -VersionsNewScript { 'not-a-version' } -ErrorAction Stop
+            } | Should -Throw
+        }
+
         It "Creates version.json (-VersionsChangeScope minor)" {
             $item = New-DockerImageVariantsVersions -Package foo -VersionsChangeScope minor -VersionsNewScript { Some-VersionNewScript } -ErrorVariable err
 
@@ -48,7 +65,6 @@ Describe "New-DockerImageVariantsVersions" {
             $v.foo.versionsNewScript | Should -Be 'Some-VersionNewScript'
             $err | Should -Be $null
         }
-
 
         It "Creates version.json (-VersionsChangeScope patch)" {
             $item = New-DockerImageVariantsVersions -Package foo -VersionsChangeScope patch -VersionsNewScript { Some-VersionNewScript } -ErrorVariable err
