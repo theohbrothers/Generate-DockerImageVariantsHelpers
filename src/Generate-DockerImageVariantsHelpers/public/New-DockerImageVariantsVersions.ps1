@@ -16,6 +16,9 @@ function New-DockerImageVariantsVersions {
 
     process {
         try {
+            $callerEA = $ErrorActionPreference
+            $ErrorActionPreference = 'Stop'
+
             $VERSIONS_JSON_FILE = "./generate/definitions/versions.json"
             if (Test-Path $VERSIONS_JSON_FILE) {
                 throw "The file '$VERSIONS_JSON_FILE' already exists"
@@ -54,10 +57,10 @@ function New-DockerImageVariantsVersions {
                 $item
             }
         }catch {
-            if ($ErrorActionPreference -eq 'Stop') {
+            if ($callerEA -eq 'Stop') {
                 throw
             }
-            if ($ErrorActionPreference -eq 'Continue') {
+            if ($callerEA -eq 'Continue') {
                 $_ | Write-Error -ErrorAction Continue
             }
         }
