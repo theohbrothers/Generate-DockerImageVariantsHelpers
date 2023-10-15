@@ -128,12 +128,7 @@ function Update-DockerImageVariantsVersions {
                 # Error if any PR failed to merge
                 if ($autoMergeResults['FailCount']) {
                     $msg = "$( $autoMergeResults['FailCount'] ) PRs failed to merge. PRs: $( ($autoMergeResults['FailPRNumbers'] | % { "#$_" }) -join ', ' )"
-                    if ($ErrorActionPreference -eq 'Stop') {
-                        throw $msg
-                    }
-                    if ($ErrorActionPreference -eq 'Continue') {
-                        $msg | Write-Error
-                    }
+                    throw $msg
                 }
                 if ($PSCmdlet.ShouldProcess("Result of merged PRs", 'return')) {
                     $autoMergeResults   # Return the results
