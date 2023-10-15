@@ -84,14 +84,24 @@ Describe "Update-DockerImageVariantsVersions" -Tag 'Unit' {
             }
         }
 
-        It 'Errors (non-terminating)' {
+        It "Honors -ErrorAction Continue" {
             Mock Get-DockerImageVariantsVersions {
                 throw
             }
 
-            Update-DockerImageVariantsVersions -ErrorVariable err 6>$null 2>$null
+            Update-DockerImageVariantsVersions -ErrorAction Continue -ErrorVariable err 6>$null 2>$null
 
             $err | Should -Not -Be $null
+        }
+
+        It "Honors -ErrorAction Stop" {
+            Mock Get-DockerImageVariantsVersions {
+                throw
+            }
+
+            {
+                Update-DockerImageVariantsVersions -ErrorAction Stop 6>$null 2>$null
+            } | Should -Throw
         }
 
         It 'Does nothing when there are no changed versions' {
