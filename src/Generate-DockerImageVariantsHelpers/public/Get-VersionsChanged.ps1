@@ -164,48 +164,4 @@ function Get-VersionsChanged {
             ,@( $versionsChanged.Keys | Sort-Object )
         }
     }
-
-        # $vMajMatch = $VersionsNew | ? { $vn = [version]$_; $vn.Major -eq $v.Major }
-        # if ($vMajMatch) {
-        #     "Found new major version: $vMajMatch" | Write-Verbose
-        #     [pscustomobject]@{
-        #         from = ''
-        #         to = $vMajMatch.ToString()
-        #     }
-        # }
-        # $vMinMatch = $VersionsNew | ? { $vn = [version]$_; $vn.Major -eq $v.Major -and $vn.Minor -eq $v.Major }
-        # if ($vMajMatch) {
-        #     "Found new major version: $vMajMatch" | Write-Verbose
-        #     [pscustomobject]@{
-        #         from = ''
-        #         to = $vMajMatch.ToString()
-        #     }
-        # }
-
-
-
-        # foreach ($vn in $VersionsNew) {
-        #     $vn = [version]$vn
-        #     if ($v.Major -lt $vn.Major) {
-        #         "Found new major version: $vn" | Write-Verbose
-        #         if (!$DryRun) {
-        #             $VERSIONS_CLONE = @( $vn.ToString() ) + $Versions.Clone()
-        #             $VERSIONS_CLONE | Sort-Object { [version]$_ } -Descending | ConvertTo-Json -Depth 100 | Set-Content $PSScriptRoot/generate/definitions/Versions.json -Encoding utf8
-        #         }
-        #     }elseif ($i -eq 0 -and $v.Major -eq $vn.Major -and $v.Minor -lt $vn.Minor) {
-        #         "Found new minor version: $vn" | Write-Verbose
-        #         if (!$DryRun) {
-        #             $VERSIONS_CLONE = @( $vn.ToString() ) + $Versions.Clone()
-        #             $VERSIONS_CLONE | Sort-Object { [version]$_ } -Descending | ConvertTo-Json -Depth 100 | Set-Content $PSScriptRoot/generate/definitions/Versions.json -Encoding utf8
-        #         }
-        #         "Found patch version: $v to $vn" | Write-Verbose
-        #     }elseif ($v.Major -eq $vn.Major -and $v.Minor -eq $vn.Minor -and $v.Build -lt $vn.Build) {
-        #         if (!$DryRun) {
-        #             $VERSIONS_CLONE = $Versions.Clone()
-        #             $VERSIONS_CLONE[$i] = $vn.ToString()
-        #             $VERSIONS_CLONE | Sort-Object { [version]$_ } -Descending | ConvertTo-Json -Depth 100 | Set-Content $PSScriptRoot/generate/definitions/Versions.json -Encoding utf8
-        #         }
-        #     }
-        # }
-    # }
 }
