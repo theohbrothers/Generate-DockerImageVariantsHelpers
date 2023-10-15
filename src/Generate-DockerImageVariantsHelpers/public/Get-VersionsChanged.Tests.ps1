@@ -6,14 +6,12 @@ Set-StrictMode -Version Latest
 
 Describe "Get-VersionsChanged" -Tag 'Unit' {
 
-    Context 'Parameters' {
-        It "Does not error when no versions are passed" {
+    Context 'Behavior' {
+
+        It "Returns empty array when no versions are passed" {
             $versionsChanged = Get-VersionsChanged -Versions @() -VersionsNew @()
             $versionsChanged | Should -Be @()
         }
-    }
-
-    Context 'Behavior' {
 
         It "Gets original versions when none changed" {
             $versions = @( '0.1.0', '1.0.0' )
@@ -37,14 +35,13 @@ Describe "Get-VersionsChanged" -Tag 'Unit' {
             $versions = @()
             $versionsNew = @( '1.0.0', '1.0.1' )
 
-            $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $versionsNew -ChangeScope minor -Verbose
+            $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $versionsNew -ChangeScope minor
 
             $versionsChanged | Should -Be @( '1.0.1' )
         }
 
         It "Gets new versions (-ChangeScope minor)" {
             $versions = @(
-                '0.1.0'
                 '1.0.0'
             )
             $VersionsNew = @(
@@ -68,9 +65,9 @@ Describe "Get-VersionsChanged" -Tag 'Unit' {
 
             $expectedVersionsChanged = [ordered]@{
                 '0.1.1' = @{
-                    from = '0.1.0'
+                    from = '0.1.1'
                     to = '0.1.1'
-                    kind = 'update'
+                    kind = 'new'
                 }
                 '1.0.1' = @{
                     from = '1.0.0'
@@ -101,7 +98,6 @@ Describe "Get-VersionsChanged" -Tag 'Unit' {
 
         It "Gets versions (-ChangeScope patch)" {
             $versions = @(
-                '0.1.0'
                 '1.0.0'
             )
             $VersionsNew = @(
@@ -122,7 +118,7 @@ Describe "Get-VersionsChanged" -Tag 'Unit' {
                 '0.1.0' = @{
                     from = '0.1.0'
                     to = '0.1.0'
-                    kind = 'existing'
+                    kind = 'new'
                 }
                 '0.1.1' = @{
                     from = '0.1.1'
