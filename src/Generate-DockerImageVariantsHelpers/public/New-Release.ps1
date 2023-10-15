@@ -7,7 +7,9 @@ function New-Release {
     )
 
     try {
+        $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
+
         if ($PSCmdlet.ShouldProcess("token, owner, and project", 'get')) {
             $env:GITHUB_TOKEN = if ($env:GITHUB_TOKEN) { $env:GITHUB_TOKEN } else { (Get-Content ~/.git-credentials -Encoding utf8 -Force -ErrorAction SilentlyContinue) -split "`n" | % { if ($_ -match '^https://[^:]+:([^:]+)@github.com') { $matches[1] } } | Select-Object -First 1 }
             if (!$env:GITHUB_TOKEN) {
@@ -86,10 +88,10 @@ function New-Release {
             $tagNext
         }
     }catch {
-        if ($ErrorActionPreference -eq 'Stop') {
+        if ($callerEA -eq 'Stop') {
             throw
         }
-        if ($ErrorActionPreference -eq 'Continue') {
+        if ($callerEA -eq 'Continue') {
             $_ | Write-Error -ErrorAction Continue
         }
     }
