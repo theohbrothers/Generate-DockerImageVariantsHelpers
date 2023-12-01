@@ -19,7 +19,7 @@
     RequiredModules = @(
         @{
             ModuleName = "Generate-DockerImageVariants"
-            RequiredVersion = '0.4.7'
+            MaximumVersion = '0.999.0'
         }
         @{
             ModuleName = "PowerShellForGitHub"
