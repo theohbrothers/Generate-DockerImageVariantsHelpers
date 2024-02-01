@@ -23,7 +23,7 @@
         }
         @{
             ModuleName = "PowerShellForGitHub"
-            RequiredVersion = '0.16.1'
+            RequiredVersion = '0.17.0'
         }
     )
     # RequiredAssemblies = @()
