@@ -17,6 +17,7 @@ function Automerge-DockerImageVariantsPR {
             'Accept' = 'application/vnd.github+json'
             'Authorization' = "Bearer $env:GITHUB_TOKEN"
             'X-GitHub-Api-Version' = '2022-11-28'
+            'Content-Type' = 'application/json'
         }
         "Will automerge PR" | Write-Host
         if (!$WhatIfPreference) {
