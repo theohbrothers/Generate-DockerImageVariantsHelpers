@@ -19,6 +19,7 @@ function New-Release {
                 'Accept' = 'application/vnd.github+json'
                 'Authorization' = "Bearer $env:GITHUB_TOKEN"
                 'X-GitHub-Api-Version' = '2022-11-28'
+                'Content-Type' = 'application/json'
             }
             $owner = ({ git remote get-url origin } | Execute-Command) -replace 'https://github.com/([^/]+)/([^/]+)', '$1'
             $project = ({ git remote get-url origin } | Execute-Command) -replace 'https://github.com/([^/]+)/([^/]+)', '$2' -replace '\.git$', ''
