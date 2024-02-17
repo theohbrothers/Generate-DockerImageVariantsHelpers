@@ -26,14 +26,33 @@ Describe "Get-DockerImageVariantsVersions" -Tag 'Unit' {
             } | Should -Throw
         }
 
-        It "Gets version.json" {
+        It "Errors when versions.json is empty" {
+            Mock Get-Content {}
+
+            Get-DockerImageVariantsVersions -ErrorVariable err 2>$null
+
+            $err | Should -Not -Be $null
+        }
+
+        It "Gets when versions.json is empty" {
             Mock Get-Content {
-                '[ "0.1.0", "0.2.0" ]'
+                ''
+            }
+
+            Get-DockerImageVariantsVersions -ErrorVariable err 2>$null
+
+            $err | Should -Not -Be $null
+        }
+
+        It "Gets versions.json" {
+            Mock Get-Content {
+                '{ "somecoolpackage": { "versions": [ "0.0.1" ] } }'
             }
 
             $versions = Get-DockerImageVariantsVersions
 
-            $versions | Should -Be @( '0.1.0', '0.2.0' )
+            $versions -is [PSCustomObject]
+            $versions.psobject.Properties.Name | Should -Not -Be $null
         }
 
     }
