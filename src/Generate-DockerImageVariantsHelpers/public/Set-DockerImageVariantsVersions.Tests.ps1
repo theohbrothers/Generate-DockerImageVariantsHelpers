@@ -48,7 +48,7 @@ Describe "Set-DockerImageVariantsVersions" {
             } | Should -Throw
         }
 
-        It "Sets version.json" {
+        It "Sets versions.json" {
             Set-DockerImageVariantsVersions '0.1.0' 6>$null
 
             Get-Content $VERSIONS_JSON_FILE -Raw | Should -Be @"
@@ -64,13 +64,13 @@ Describe "Set-DockerImageVariantsVersions" {
 "@
         }
 
-        It "Sets version.json (-WhatIf)" {
+        It "Sets versions.json (-WhatIf)" {
             Set-DockerImageVariantsVersions '0.1.0' -WhatIf >$null 6>$null
 
             Test-Path $VERSIONS_JSON_FILE | Should -Be $false
         }
 
-        It "Sets version.json with an empty array (first arg)" {
+        It "Sets versions.json with an empty array (first arg)" {
             Set-DockerImageVariantsVersions @() 6>$null
 
             Get-Content $VERSIONS_JSON_FILE -Raw | Should -Be @"
@@ -79,7 +79,7 @@ Describe "Set-DockerImageVariantsVersions" {
 "@
         }
 
-        It "Sets version.json with a non-empty array" {
+        It "Sets versions.json with a non-empty array" {
             Set-DockerImageVariantsVersions -Versions @( '0.1.0', '0.2.0' ) 6>$null
 
             Get-Content $VERSIONS_JSON_FILE -Raw | Should -Match @"

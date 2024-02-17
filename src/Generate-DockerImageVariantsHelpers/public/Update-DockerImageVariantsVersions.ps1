@@ -6,7 +6,7 @@ function Update-DockerImageVariantsVersions {
         [Parameter(ParameterSetName='Pipeline')]
         [scriptblock]$CommitPreScriptblock
     ,
-        [Parameter(HelpMessage="Whether to open a PR for each updated version in version.json")]
+        [Parameter(HelpMessage="Whether to open a PR for each updated version in versions.json")]
         [Parameter(ParameterSetName='Default')]
         [Parameter(ParameterSetName='Pipeline')]
         [switch]$PR
