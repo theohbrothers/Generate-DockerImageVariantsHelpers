@@ -53,7 +53,7 @@ Describe "New-DockerImageVariantsVersions" {
             } | Should -Throw
         }
 
-        It "Creates version.json (-VersionsChangeScope minor)" {
+        It "Creates versions.json (-VersionsChangeScope minor)" {
             $item = New-DockerImageVariantsVersions -Package foo -VersionsChangeScope minor -VersionsNewScript { Some-VersionNewScript } -ErrorVariable err
 
             $item | Should -Not -Be $null
@@ -66,7 +66,7 @@ Describe "New-DockerImageVariantsVersions" {
             $err | Should -Be $null
         }
 
-        It "Creates version.json (-VersionsChangeScope patch)" {
+        It "Creates versions.json (-VersionsChangeScope patch)" {
             $item = New-DockerImageVariantsVersions -Package foo -VersionsChangeScope patch -VersionsNewScript { Some-VersionNewScript } -ErrorVariable err
 
             $item | Should -Not -Be $null
@@ -79,7 +79,7 @@ Describe "New-DockerImageVariantsVersions" {
             $err | Should -Be $null
         }
 
-        It "Creates version.json (-WhatIf)" {
+        It "Creates versions.json (-WhatIf)" {
             $item = New-DockerImageVariantsVersions -Package foo -VersionsChangeScope minor -VersionsNewScript { Some-VersionNewScript } -ErrorVariable err -WhatIf 6>$null
 
             Test-Path $VERSIONS_JSON_FILE | Should -Be $false
@@ -87,7 +87,7 @@ Describe "New-DockerImageVariantsVersions" {
             $err | Should -Be $null
         }
 
-        It "Errors if version.json already exists" {
+        It "Errors if versions.json already exists" {
             New-Item $VERSIONS_JSON_FILE -ItemType File -Force > $null
 
             $item = New-DockerImageVariantsVersions -Package foo -VersionsChangeScope minor -VersionsNewScript { Some-VersionNewScript } -ErrorVariable err 2>$null
