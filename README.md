@@ -1,6 +1,6 @@
 # Generate-DockerImageVariantsHelpers
 
-[![github-actions](https://github.com/theohbrothers/Generate-DockerImageVariantsHelpers/workflows/ci-master-pr/badge.svg)](https://github.com/theohbrothers/Generate-DockerImageVariantsHelpers/actions)
+[![github-actions](https://github.com/theohbrothers/Generate-DockerImageVariantsHelpers/actions/workflows/ci-master-pr.yml/badge.svg?branch=master)](https://github.com/theohbrothers/Generate-DockerImageVariantsHelpers/actions/workflows/ci-master-pr.yml)
 [![github-release](https://img.shields.io/github/v/release/theohbrothers/Generate-DockerImageVariantsHelpers?style=flat-square)](https://github.com/theohbrothers/Generate-DockerImageVariantsHelpers/releases/)
 [![powershell-gallery-release](https://img.shields.io/powershellgallery/v/Generate-DockerImageVariantsHelpers?logo=powershell&logoColor=white&label=PSGallery&labelColor=&style=flat-square)](https://www.powershellgallery.com/packages/Generate-DockerImageVariantsHelpers/)
 
