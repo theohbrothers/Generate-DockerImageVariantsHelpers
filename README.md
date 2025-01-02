@@ -33,8 +33,8 @@ $repo = Clone-TempRepo
 cd $repo
 
 # Create generate/definitions/versions.json
-New-DockerImageVariantsVersions -Package coolpackage -VersionsChangeScope minor -VersionsNewScript { Invoke-RestMethod https://example.com/versions.json } #-Whatif
-New-DockerImageVariantsVersions -Package coolpackage -VersionsChangeScope patch -VersionsNewScript { Invoke-RestMethod https://example.com/versions.json } #-Whatif
+New-DockerImageVariantsVersions -Package coolpackage -VersionsChangeScope minor -VersionsNewScript { Invoke-RestMethod https://example.com/versions.json } #-Limit 1 -Whatif
+New-DockerImageVariantsVersions -Package coolpackage -VersionsChangeScope patch -VersionsNewScript { Invoke-RestMethod https://example.com/versions.json } #-Limit 1 -Whatif
 
 # Get generate/definitions/versions.json
 $versionsConfig = Get-DockerImageVariantsVersions
@@ -48,6 +48,7 @@ Set-DockerImageVariantsVersions @{
         )
         versionsChangeScope = 'minor'
         versionsNewScript = 'Invoke-RestMethod https://example.com/versions.json'
+        limit = 1 # optional
     }
 } #-WhatIf
 

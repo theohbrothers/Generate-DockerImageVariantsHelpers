@@ -14,6 +14,10 @@ function Get-VersionsChanged {
         [string]$ChangeScope = 'minor'
     ,
         [Parameter()]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Limit
+    ,
+        [Parameter()]
         [switch]$AsObject
     ,
         [Parameter()]
@@ -149,19 +153,43 @@ function Get-VersionsChanged {
 
     if ($AsObject) {
         if ($Descending) {
-            $versionsChanged
+            $versionsChangedDesc = [ordered]@{}
+            if ($Limit) {
+                $versionsChanged.Keys | Select-Object -First $Limit | % {
+                    $versionsChangedDesc[$_] = $versionsChanged[$_]
+                }
+            }else {
+                $versionsChanged.Keys | % {
+                    $versionsChangedDesc[$_] = $versionsChanged[$_]
+                }
+            }
+            $versionsChangedDesc
         }else {
             $versionsChangedAsc = [ordered]@{}
-            $versionsChanged.Keys | Sort-Object | % {
-                $versionsChangedAsc[$_] = $versionsChanged[$_]
+            if ($Limit) {
+                $versionsChanged.Keys | Sort-Object | Select-Object -First $Limit | % {
+                    $versionsChangedAsc[$_] = $versionsChanged[$_]
+                }
+            }else {
+                $versionsChanged.Keys | Sort-Object | % {
+                    $versionsChangedAsc[$_] = $versionsChanged[$_]
+                }
             }
             $versionsChangedAsc
         }
     }else {
         if ($Descending) {
-            ,@( $versionsChanged.Keys )
+            if ($Limit) {
+                ,@( $versionsChanged.Keys | Select-Object -First $Limit )
+            }else {
+                ,@( $versionsChanged.Keys )
+            }
         }else {
-            ,@( $versionsChanged.Keys | Sort-Object )
+            if ($Limit) {
+                ,@( $versionsChanged.Keys | Sort-Object | Select-Object -First $Limit )
+            }else {
+                ,@( $versionsChanged.Keys | Sort-Object )
+            }
         }
     }
 }
