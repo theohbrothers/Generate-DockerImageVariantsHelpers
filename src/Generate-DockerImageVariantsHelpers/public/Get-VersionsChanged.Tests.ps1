@@ -162,26 +162,34 @@ Describe "Get-VersionsChanged" -Tag 'Unit' {
             $versionsNew = @( '0.0.0', '0.1.0', '0.2.0' )
 
             $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $VersionsNew
-
             $versionsChanged | Should -Be $versionsNew
 
             $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $VersionsNew -AsObject
-
             @( $versionsChanged.Keys ) | Should -Be $versionsNew
 
+            $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $VersionsNew -Limit 1
+            $versionsChanged | Should -Be @( $versionsNew[0] )
+
+            $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $VersionsNew -AsObject -Limit 1
+            @( $versionsChanged.Keys ) | Should -Be @( $versionsNew[0] )
         }
+
         It "Orders by descending order" {
             $versions = @()
             $versionsNew = @( '0.0.0', '0.1.0', '0.2.0' )
             $expectedVersionsChanged = @( '0.2.0', '0.1.0', '0.0.0' )
 
             $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $VersionsNew -Descending
-
             $versionsChanged | Should -Be $expectedVersionsChanged
 
             $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $VersionsNew -AsObject -Descending
-
             @( $versionsChanged.Keys ) | Should -Be $expectedVersionsChanged
+
+            $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $VersionsNew -Descending -Limit 1
+            $versionsChanged | Should -Be @( $expectedVersionsChanged[0] )
+
+            $versionsChanged = Get-VersionsChanged -Versions $versions -VersionsNew $VersionsNew -AsObject -Descending -Limit 1
+            @( $versionsChanged.Keys ) | Should -Be $( $expectedVersionsChanged[0] )
         }
     }
 

@@ -54,7 +54,8 @@ function Update-DockerImageVariantsVersions {
                         throw "$pkg.versionsNewScript returned null. It should return an array of versions (semver)."
                     }
                     $changeScope = $versionsConfig.$pkg.versionsChangeScope
-                    Get-VersionsChanged -Versions $versions -VersionsNew $versionsNew -ChangeScope $changeScope -AsObject -Descending
+                    $limit = if ($versionsConfig.$pkg.psobject.Properties.Name.Contains('limit')) { $versionsConfig.$pkg.limit } else { 0 }
+                    Get-VersionsChanged -Versions $versions -VersionsNew $versionsNew -ChangeScope $changeScope -Limit:$limit -AsObject -Descending
                 }
 
                 $changedCount = ($versionsChanged.Values | ? { $_['kind'] -ne 'existing' } | Measure-Object).Count
@@ -78,7 +79,11 @@ function Update-DockerImageVariantsVersions {
                                         $versionsConfig.$pkg.versions
                                     )
                                     $versionsConfig.$pkg.versions = @(
-                                        $versionsUpdated | Select-Object -Unique | Sort-Object { [version]$_ } -Descending
+                                        if ($versionsConfig.$pkg.psobject.Properties.Name.Contains('limit')) {
+                                            $versionsUpdated | Select-Object -Unique | Sort-Object { [version]$_ } -Descending | Select-Object -First $versionsConfig.$pkg.limit
+                                        }else {
+                                            $versionsUpdated | Select-Object -Unique | Sort-Object { [version]$_ } -Descending
+                                        }
                                     )
                                     Set-DockerImageVariantsVersions -Versions $versionsConfig
                                     if ($PR) {
@@ -96,7 +101,11 @@ function Update-DockerImageVariantsVersions {
                                     }
                                 }
                                 $versionsConfig.$pkg.versions = @(
-                                    $versionsUpdated | Select-Object -Unique | Sort-Object { [version]$_ } -Descending
+                                    if ($versionsConfig.$pkg.psobject.Properties.Name.Contains('limit')) {
+                                        $versionsUpdated | Select-Object -Unique | Sort-Object { [version]$_ } -Descending | Select-Object -First $versionsConfig.$pkg.limit
+                                    }else {
+                                        $versionsUpdated | Select-Object -Unique | Sort-Object { [version]$_ } -Descending
+                                    }
                                 )
                                 Set-DockerImageVariantsVersions -Versions $versionsConfig
                                 if ($PR) {

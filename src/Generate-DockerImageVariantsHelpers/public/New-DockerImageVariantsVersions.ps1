@@ -12,6 +12,10 @@ function New-DockerImageVariantsVersions {
         [Parameter(Mandatory,HelpMessage='Script to get an array of versions')]
         [ValidateNotNull()]
         [object]$VersionsNewScript
+    ,
+        [Parameter(Mandatory=$false,HelpMessage='Limit the number of returned versions')]
+        [ValidateRange(0, [int]::MaxValue)]
+        [int]$Limit
     )
 
     process {
@@ -31,12 +35,12 @@ function New-DockerImageVariantsVersions {
                 [scriptblock]::Create($VersionsNewScript)
             }
 
-            $content = @{
+            $o = @{
                 $Package = [ordered]@{
                     versions = @(
                         if ($VersionsNewScript) {
                             $versionsNew = Invoke-Command $VersionsNewScript
-                            $versionsChanged = Get-VersionsChanged -Versions @() -VersionsNew $versionsNew -ChangeScope $VersionsChangeScope -Descending
+                            $versionsChanged = Get-VersionsChanged -Versions @() -VersionsNew $versionsNew -ChangeScope $VersionsChangeScope -Descending -Limit:$Limit
                             $versionsChanged
                         }
                     )
@@ -44,7 +48,10 @@ function New-DockerImageVariantsVersions {
                     versionsNewScript = $versionsNewScript.ToString().Trim()
                 }
             }
-            $content = $content | ConvertTo-Json -Depth 100
+            if ($Limit) {
+                $o['limit'] = $Limit
+            }
+            $content = $o | ConvertTo-Json -Depth 100
             if ($PSCmdlet.ShouldProcess("$VERSIONS_JSON_FILE")) {
                 "Creating $VERSIONS_JSON_FILE" | Write-Host -ForegroundColor Green
                 $item = New-Item $VERSIONS_JSON_FILE -ItemType File
