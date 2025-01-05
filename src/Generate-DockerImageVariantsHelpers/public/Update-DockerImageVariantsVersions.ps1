@@ -60,7 +60,7 @@ function Update-DockerImageVariantsVersions {
 
                 $changedCount = ($versionsChanged.Values | ? { $_['kind'] -ne 'existing' } | Measure-Object).Count
                 if ($changedCount -eq 0) {
-                    "No changed versions. Nothing to do" | Write-Host -ForegroundColor Green
+                    "Package $pkg`: No changed versions found. Nothing to do" | Write-Host -ForegroundColor Green
                 }else {
                     foreach ($vc in $VersionsChanged.Values) {
                         # Update versions.json and open PR
