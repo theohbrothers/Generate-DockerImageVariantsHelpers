@@ -47,12 +47,12 @@ function New-DockerImageVariantsPR {
                 $BRANCH = if ($Verb -eq 'add') {
                     "enhancement/add-$Package-$( $Version.Major ).$( $Version.Minor ).$( $Version.Build )-variants"
                 }elseif ($Verb -eq 'update') {
-                    "enhancement/bump-$Package-$( $Version.Major ).$( $Version.Minor )-variants-to-$( $VersionNew )"
+                    "enhancement/bump-$Package-$( $Version.Major ).$( $Version.Minor )-to-$( $VersionNew )"
                 }
                 $COMMIT_MSG = if ($Verb -eq 'add') {
                     "Enhancement: Add $Package $( $Version.Major ).$( $Version.Minor ).$( $Version.Build ) variants"
                 }elseif ($Verb -eq 'update') {
-                    "Enhancement: Bump $Package $( $Version.Major ).$( $Version.Minor ) variants to $( $VersionNew )"
+                    "Enhancement: Bump $Package $( $Version.Major ).$( $Version.Minor ) to $( $VersionNew )"
                 }
                 $existingBranch = { git rev-parse --verify $BRANCH } | Execute-Command -ErrorAction Continue
                 if ($existingBranch) {
