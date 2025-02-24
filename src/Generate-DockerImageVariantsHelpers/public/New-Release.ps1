@@ -54,12 +54,15 @@ function New-Release {
         $milestoneTitle = 'next-release'
         if ($PSCmdlet.ShouldProcess("milestone '$milestoneTitle'", "rename milestone to '<tag>' and close")) {
             "Getting milestone: $milestoneTitle" | Write-Host -ForegroundColor Green
-            $milestones = Invoke-RestMethod -Method GET -Headers $headers -Uri "https://api.github.com/repos/$owner/$project/milestones" -Body @{
-                state = 'all'
+            $milestone = Invoke-RestMethod -Method GET -Headers $headers -Uri "https://api.github.com/repos/$owner/$project/milestones" -Body @{
+                state = 'open'
+                title = $milestoneTitle
             }
-            $milestone = $milestones | ? { $_.title -eq $milestoneTitle -and $_.state -eq 'open' }
             if ($milestone) {
-                if ($milestoneClash = $milestones | ? { $_.title -eq $tagNext }) {
+                $milestoneClash = Invoke-RestMethod -Method GET -Headers $headers -Uri "https://api.github.com/repos/$owner/$project/milestones" -Body @{
+                    title = $tagNext
+                }
+                if ($milestoneClash) {
                     "Renaming existing milestone '$tagNext' to '$tagNext-renamed' to prevent clash" | Write-Warning
                     $milestoneClash = Invoke-RestMethod -Method PATCH -Headers $headers -Uri "https://api.github.com/repos/$owner/$project/milestones/$( $milestoneClash[0].number )" -Body (@{
                         title = "$tagNext-renamed"

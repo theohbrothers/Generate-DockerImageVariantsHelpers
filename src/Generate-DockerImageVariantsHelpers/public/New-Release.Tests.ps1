@@ -31,23 +31,22 @@ Describe "New-Release" -Tag 'Unit' {
             'v0.1.0'
         }
         function Get-Milestones {
+            param (
+                $Body
+            )
             ,@(
                 [pscustomobject]@{
                     number = 123
-                    title = 'next-release'
-                    state = 'open'
-                },
-                [pscustomobject]@{
-                    number = 122
-                    title = 'v0.1.0'
-                    state = 'closed'
+                    title = $Body['title']
+                    state = $Body['state']
                 }
             )
         }
         Mock Invoke-RestMethod {
             param (
                 $Method,
-                $Uri
+                $Uri,
+                $Body
             )
 
             if ($Uri -eq 'https://api.github.com/repos/namespace/project/git/refs') {
@@ -55,7 +54,7 @@ Describe "New-Release" -Tag 'Unit' {
                     name = 'v0.1.0'
                 }
             }elseif ($Uri -eq 'https://api.github.com/repos/namespace/project/milestones') {
-                ,(Get-Milestones)
+                ,(Get-Milestones -Body $Body)
             }elseif ($Method -eq 'PATCH' -and $Uri -eq 'https://api.github.com/repos/namespace/project/milestones/122') {
                 [pscustomobject]@{
                     number = 122
@@ -102,7 +101,7 @@ Describe "New-Release" -Tag 'Unit' {
 
         Assert-MockCalled git -Scope It -Times 4
         Assert-MockCalled Get-TagNext -Scope It -Times 1
-        Assert-MockCalled Invoke-RestMethod -Scope It -Times 4
+        Assert-MockCalled Invoke-RestMethod -Scope It -Times 5
         $tag | Should -Be (Get-TagNext)
     }
 
